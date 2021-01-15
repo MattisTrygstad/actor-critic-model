@@ -1,4 +1,5 @@
 
+import ast
 import configparser
 
 
@@ -6,9 +7,9 @@ class Config:
     config = configparser.ConfigParser()
     config.read('config.ini')
 
-    board_type = str(config.get('parameters', 'board_type'))
-    size = int(config.get('parameters', 'size'))
-    open_cells = int(config.get('parameters', 'empty_nodes'))
+    board_type = int(config.get('parameters', 'board_type'))
+    board_size = int(config.get('parameters', 'board_size'))
+    empty_nodes = list(ast.literal_eval(config.get('parameters', 'empty_nodes')))
     episodes = int(config.get('parameters', 'episodes'))
     nn_critic = bool(config.get('parameters', 'nn_critic'))
     nn_dimentions = list(config.get('parameters', 'nn_dimentions'))
