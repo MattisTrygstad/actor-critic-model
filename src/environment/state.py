@@ -19,6 +19,10 @@ class State:
         self.node_names = {}  # (row, col): str
         self.node_coordinates = {}  # (row,col): (x_value, y_value)
 
+        # Used for illustrating the executed action
+        self.start_pos = ()
+        self.end_pos = ()
+
         self.__generate_nodes()
         self.__generate_edges()
         self.__generate_coordinates()
