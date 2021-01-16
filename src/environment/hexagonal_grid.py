@@ -41,13 +41,17 @@ class HexagonalGrid(Environment):
         node_coordinates = self.state.node_coordinates
 
         if Config.board_type == BoardType.DIAMOND.value:
-            fig = plt.figure(figsize=(7, 8))
+            fig, ax = plt.subplots(figsize=(7, 8))
         else:
-            fig = plt.figure(figsize=(9, 7))
-        plt.axes()
+            fig, ax = plt.subplots(figsize=(9, 7))
 
-        nx.draw(self.G, pos=node_coordinates, nodelist=empty_nodes, node_color='grey', node_size=800, ax=fig.axes[0], labels=node_names)
-        nx.draw(self.G, pos=node_coordinates, nodelist=occupied_nodes, node_color='blue', node_size=800, ax=fig.axes[0], labels=node_names)
+        plt.title('Peg Solitaire')
 
-        # plt.gca().invert_xaxis()
+        nx.draw(self.G, pos=node_coordinates, nodelist=empty_nodes, node_color='grey', node_size=800, ax=ax, labels=node_names)
+        nx.draw(self.G, pos=node_coordinates, nodelist=occupied_nodes, node_color='blue', node_size=800, ax=ax, labels=node_names)
+
+        ax.set_axis_on()
+        ax.tick_params(left=True, bottom=True, labelleft=True, labelbottom=True)
+
+        fig.tight_layout()
         plt.show()
