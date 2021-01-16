@@ -10,11 +10,11 @@ from utils.config_parser import Config
 
 def main():
     if Config.human_mode:
-        play()
+        normal_game()
         return
 
 
-def play():
+def normal_game():
     grid = HexagonalGrid()
 
     grid.visualize()
