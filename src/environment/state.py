@@ -72,14 +72,14 @@ class State:
         for (row, col) in self.get_occupied_nodes().keys():
             for x, y in self.neighbors:
                 jumped_node = (row + x, col + y)
-                landing_node = (row + 2 * x, col + 2 * y)
+                end_node = (row + 2 * x, col + 2 * y)
 
                 # Check if jumped node and landing node is on the grid
-                if jumped_node not in self.nodes or landing_node not in self.nodes:
+                if jumped_node not in self.nodes or end_node not in self.nodes:
                     continue
 
                 # Check if jumped node and landing node has valid states
-                if self.nodes[jumped_node] == NodeState.OCCUPIED.value and self.nodes[landing_node] == NodeState.EMPTY.value:
-                    legal_actions.append(((row, col), (landing_node)))
+                if self.nodes[jumped_node] == NodeState.OCCUPIED.value and self.nodes[end_node] == NodeState.EMPTY.value:
+                    legal_actions.append(((row, col), end_node))
 
         return legal_actions
