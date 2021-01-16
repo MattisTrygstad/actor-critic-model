@@ -14,11 +14,12 @@ class Environment(ABC):
     def execute_action(self, action: Action) -> State:
         pass
 
+    @abstractmethod
     def reverse_action() -> State:
         pass
 
     @abstractmethod
-    def get_legal_moves(self) -> list:
+    def get_legal_actions(self) -> list:
         pass
 
     @abstractmethod
@@ -30,5 +31,5 @@ class Environment(ABC):
         pass
 
     @abstractmethod
-    def visualize_board() -> None:
+    def visualize(self) -> None:
         pass
