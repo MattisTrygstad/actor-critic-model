@@ -1,6 +1,4 @@
 from abc import ABC, abstractmethod
-
-from enums import Action
 from environment.state import State
 
 
@@ -11,11 +9,11 @@ class Environment(ABC):
     """
 
     @abstractmethod
-    def execute_action(self, action: Action) -> State:
+    def execute_action(self, action: tuple) -> None:
         pass
 
     @abstractmethod
-    def reverse_action() -> State:
+    def undo_action(self) -> None:
         pass
 
     @abstractmethod
