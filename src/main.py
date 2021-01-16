@@ -8,7 +8,8 @@ def main():
     grid = HexagonalGrid()
     agent = Learner()
 
-    grid.get_legal_actions()
+    legal_action = grid.get_legal_actions()
+    print(legal_action)
     grid.visualize()
 
 

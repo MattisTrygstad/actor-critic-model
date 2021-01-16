@@ -3,6 +3,7 @@
 from math import cos, pi, sin
 from enums import BoardType, NodeState
 from utils.config_parser import Config
+from utils.trigonometry import rotation_matrix
 
 
 class State:
@@ -18,10 +19,11 @@ class State:
         self.node_names = {}  # (row, col): str
         self.node_coordinates = {}  # (row,col): (x_value, y_value)
 
-        self.__initialize_board()
+        self.__generate_nodes()
+        self.__generate_edges()
+        self.__generate_coordinates()
 
-    def __initialize_board(self) -> None:
-        # Generate board layout
+    def __generate_nodes(self) -> None:
         if Config.board_type == BoardType.TRIANGLE.value:
             for row in range(self.size):
                 for col in range(row + 1):
@@ -30,7 +32,7 @@ class State:
         elif Config.board_type == BoardType.DIAMOND.value:
             for row in range(self.size):
                 for col in range(self.size):
-                    # Constuct two triangles, which together will form a diamond pattern
+                    # Constuct two right triangles, which together will form a parallelogram. Will be offset to a diamond pattern when visualizing.
                     if row >= col:
                         # Top triangle
                         self.nodes[(row, col)] = NodeState.OCCUPIED.value
@@ -44,17 +46,18 @@ class State:
         for (row, col) in Config.empty_nodes:
             self.nodes[(row, col)] = NodeState.EMPTY.value
 
-        # Add edges
-        for (row, col), state in self.nodes.items():
+    def __generate_edges(self) -> None:
+        for (row, col) in self.nodes.keys():
             for (x, y) in self.neighbors:
                 if (row + x, col + y) in self.nodes:
                     self.edges.append(((row, col), (row + x, col + y)))
 
-        # Generate node coordinates used for visialization
+    def __generate_coordinates(self) -> None:
         for (row, col) in self.nodes:
-            # Rotate 90deg to match action offsets
-            (x, y) = self.__rotation_matrix(row, col, -pi / 2)
-            # Center each row to form a pyramid/diamond pattern (parallelogram -> diamond and right triangle -> equilateral triangle)
+            # Rotate entire grid 90deg to match action offsets
+            (x, y) = rotation_matrix(row, col, -pi / 2)
+
+            # Offset in x direction (parallelogram -> diamond and right triangle -> equilateral triangle)
             self.node_coordinates[(row, col)] = (x + 1 / 2 * y, y)
 
     def get_empty_nodes(self) -> dict:
@@ -64,7 +67,9 @@ class State:
         return {key: value for (key, value) in self.nodes.items() if value == NodeState.OCCUPIED.value}
 
     def get_legal_actions(self) -> list:
-        for (row, col), state in self.get_occupied_nodes().items():
+        legal_actions = []  # [((x,y),(i,j)),...]
+
+        for (row, col) in self.get_occupied_nodes().keys():
             for x, y in self.neighbors:
                 jumped_node = (row + x, col + y)
                 landing_node = (row + 2 * x, col + 2 * y)
@@ -73,9 +78,8 @@ class State:
                 if jumped_node not in self.nodes or landing_node not in self.nodes:
                     continue
 
-                # Check if Node state implies valid action
+                # Check if jumped node and landing node has valid states
                 if self.nodes[jumped_node] == NodeState.OCCUPIED.value and self.nodes[landing_node] == NodeState.EMPTY.value:
-                    print((row, col))
+                    legal_actions.append(((row, col), (landing_node)))
 
-    def __rotation_matrix(self, x: int, y: int, rad: float) -> tuple:
-        return (x * cos(rad) - y * sin(rad), x * sin(rad) + y * cos(rad))
+        return legal_actions
