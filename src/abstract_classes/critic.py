@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 
-class Agent(ABC):
+class Critic(ABC):
     """
     Abstract class to be implemented by each agent
     required tables.

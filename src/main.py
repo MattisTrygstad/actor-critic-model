@@ -20,6 +20,11 @@ def normal_game():
     grid.visualize()
 
     while True:
+        # Check win condition
+        if grid.check_win_condition():
+            print('Congratulations, you won!')
+            break
+
         legal_actions = grid.get_legal_actions()
 
         print('-----\nLegal moves:')
