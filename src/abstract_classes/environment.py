@@ -21,6 +21,10 @@ class Environment(ABC):
         pass
 
     @abstractmethod
+    def check_win_condition(self) -> bool:
+        pass
+
+    @abstractmethod
     def get_state(self) -> State:
         pass
 

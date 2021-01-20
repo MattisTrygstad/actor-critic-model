@@ -1,6 +1,5 @@
 
 from copy import deepcopy
-import copy
 from matplotlib import pyplot as plt
 from abstract_classes.environment import Environment
 from enums import BoardType, Color, NodeState
@@ -44,6 +43,13 @@ class HexagonalGrid(Environment):
 
     def get_legal_actions(self) -> list:
         return self.state.get_legal_actions()
+
+    def check_win_condition(self) -> bool:
+        num_occupied_nodes = len(self.state.get_occupied_nodes())
+        if num_occupied_nodes == 1:
+            return True
+        else:
+            return False
 
     def get_state(self) -> State:
         return self.state

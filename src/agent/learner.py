@@ -1,7 +1,5 @@
-from abstract_classes.agent import Agent
 
-
-class Learner(Agent):
+class Learner():
 
     def __init__(self):
         super().__init__()
