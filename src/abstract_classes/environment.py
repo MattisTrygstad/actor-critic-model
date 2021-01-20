@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
-from environment.state import State
+from typing import Tuple
+
+from environment.universal_state import UniversalState
 
 
 class Environment(ABC):
@@ -25,11 +27,11 @@ class Environment(ABC):
         pass
 
     @abstractmethod
-    def get_state(self) -> State:
+    def get_state(self) -> UniversalState:
         pass
 
     @abstractmethod
-    def reset(self) -> State:
+    def reset(self) -> None:
         pass
 
     @abstractmethod
