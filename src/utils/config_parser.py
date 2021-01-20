@@ -7,7 +7,9 @@ class Config:
     config = configparser.ConfigParser()
     config.read('config.ini')
 
-    human_mode = bool(config.get('parameters', 'human_mode'))
+    human_mode = bool(ast.literal_eval(config.get('parameters', 'human_mode')))
+    action_penalty = int(config.get('parameters', 'action_penalty'))
+    goal_reward = int(config.get('parameters', 'goal_reward'))
     board_type = int(config.get('parameters', 'board_type'))
     board_size = int(config.get('parameters', 'board_size'))
     empty_nodes = list(ast.literal_eval(config.get('parameters', 'empty_nodes')))

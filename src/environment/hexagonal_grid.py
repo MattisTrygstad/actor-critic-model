@@ -3,8 +3,10 @@ from copy import deepcopy
 from matplotlib import pyplot as plt
 from abstract_classes.environment import Environment
 from enums import BoardType, Color, NodeState
-from environment.state import State
+from environment.state import HexagonalGridState
 import networkx as nx
+from typing import Dict, Tuple
+from environment.universal_state import UniversalState
 
 from utils.config_parser import Config
 
@@ -12,7 +14,7 @@ from utils.config_parser import Config
 class HexagonalGrid(Environment):
 
     def __init__(self):
-        self.state = State()
+        self.state = HexagonalGridState()
         self.history = []
 
         if Config.board_type == BoardType.DIAMOND.value:
@@ -24,7 +26,7 @@ class HexagonalGrid(Environment):
         self.G.add_nodes_from(self.state.nodes)
         self.G.add_edges_from(self.state.edges)
 
-    def execute_action(self, action: tuple) -> None:
+    def execute_action(self, action: tuple) -> int:
         self.history.append(deepcopy(self.state.nodes))
 
         (start_node, end_node) = action
@@ -37,7 +39,12 @@ class HexagonalGrid(Environment):
         self.state.nodes[jumped_node] = NodeState.EMPTY.value
         self.state.nodes[end_node] = NodeState.OCCUPIED.value
 
-    def undo_action(self) -> State:
+        if self.check_win_condition():
+            return Config.goal_reward
+        else:
+            return Config.goal_reward
+
+    def undo_action(self) -> None:
         if self.history:
             self.state.nodes = self.history.pop()
 
@@ -51,10 +58,13 @@ class HexagonalGrid(Environment):
         else:
             return False
 
-    def get_state(self) -> State:
-        return self.state
+    def get_state(self) -> UniversalState:
+        universal_state = UniversalState()
+        universal_state.state = self.state.nodes
 
-    def reset(self) -> State:
+        return universal_state
+
+    def reset(self) -> HexagonalGridState:
         self.state.reset()
 
     def visualize(self) -> None:

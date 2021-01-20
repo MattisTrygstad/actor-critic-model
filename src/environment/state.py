@@ -1,12 +1,13 @@
 
 
-from math import cos, pi, sin
+from math import pi
 from enums import BoardType, NodeState
+from environment.universal_state import UniversalState
 from utils.config_parser import Config
 from utils.trigonometry import rotation_matrix
 
 
-class State:
+class HexagonalGridState(UniversalState):
 
     def __init__(self) -> None:
         super().__init__()
@@ -14,12 +15,11 @@ class State:
         self.neighbors = [(-1, -1), (-1, 0), (0, -1), (0, 1), (1, 0), (1, 1)]
         self.size = Config.board_size
 
-        self.nodes = {}  # (row, col): NodeStatus
         self.edges = []  # [((x,y),(i,j)),...)]
         self.node_names = {}  # (row, col): str
         self.node_coordinates = {}  # (row,col): (x_value, y_value)
 
-        # Used for illustrating the executed action
+        # Describes the last executed action
         self.start_pos = ()
         self.end_pos = ()
 
