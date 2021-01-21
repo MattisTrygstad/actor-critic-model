@@ -3,9 +3,10 @@ from copy import deepcopy
 from matplotlib import pyplot as plt
 from abstract_classes.environment import Environment
 from enums import BoardType, Color, NodeState
-from environment.state import HexagonalGridState
 import networkx as nx
 from typing import Dict, Tuple
+from environment.hexagonal_grid_state import HexagonalGridState
+from environment.universal_action import UniversalAction
 from environment.universal_state import UniversalState
 
 from utils.config_parser import Config
@@ -26,10 +27,10 @@ class HexagonalGrid(Environment):
         self.G.add_nodes_from(self.state.nodes)
         self.G.add_edges_from(self.state.edges)
 
-    def execute_action(self, action: tuple) -> int:
+    def execute_action(self, action: UniversalAction) -> int:
         self.history.append(deepcopy(self.state.nodes))
 
-        (start_node, end_node) = action
+        (start_node, end_node) = action.action
         jumped_node = ((start_node[0] + end_node[0]) / 2, (start_node[1] + end_node[1]) / 2)
 
         self.state.start_pos = start_node
@@ -60,14 +61,14 @@ class HexagonalGrid(Environment):
 
     def get_state(self) -> UniversalState:
         universal_state = UniversalState()
-        universal_state.state = self.state.nodes
+        universal_state.nodes = deepcopy(self.state.nodes)
 
         return universal_state
 
-    def reset(self) -> HexagonalGridState:
-        self.state.reset()
+    def reset(self) -> None:
+        self.state = HexagonalGridState()
 
-    def visualize(self) -> None:
+    def visualize(self, block: bool) -> None:
         plt.cla()
         empty_nodes = self.state.get_empty_nodes()
         occupied_nodes = self.state.get_occupied_nodes()
@@ -88,6 +89,6 @@ class HexagonalGrid(Environment):
         plt.title('Peg Solitaire') """
 
         self.fig.tight_layout()
-        plt.show(block=False)
+        plt.show(block=block)
         self.fig.patch.set_facecolor(Color.WHITE.value)
         plt.pause(0.1)

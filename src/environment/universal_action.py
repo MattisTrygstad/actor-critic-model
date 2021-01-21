@@ -1,6 +1,6 @@
 class UniversalAction():
     """
-    Superclass for representing an action any game. This contributes to decoupeling of environment and agent.
+    Superclass for representing an action any game. This contributes to decoupling of the environment and the agent.
     """
 
     def __init__(self) -> None:

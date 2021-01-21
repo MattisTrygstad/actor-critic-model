@@ -25,38 +25,70 @@ def actor_critic_game():
     critic = Critic(TableApproximator())
     actor = Actor()
 
+    wins = 0
+    losses = 0
+
     for episode in range(Config.episodes):
         critic.reset_eligibilies()
         actor.reset_eligibilities()
 
-        prev_state: UniversalState = env.get_state()
-        prev_action: UniversalAction = actor.generate_action(prev_state)
-
-        goal = env.check_win_condition()
+        state: UniversalState = env.get_state()
         legal_actions = env.get_legal_actions()
-        while not goal and len(legal_actions) != 0:
-            reinforcement = env.execute_action(prev_action)
 
-            state: UniversalState = env.get_state()
-            action: UniversalAction = actor.generate_action(state)
+        action: UniversalAction = actor.generate_action(state, legal_actions)
 
-            actor.initialize_eligibility(prev_state, prev_action)
+        while True:
+            reinforcement = env.execute_action(action)
+            next_state: UniversalState = env.get_state()
+            next_legal_actions = env.get_legal_actions()
 
-            td_error: float = critic.compute_temporal_difference_error(prev_state, state, reinforcement)
+            if env.check_win_condition():
+                print('You won!')
+                wins += 1
+                break
 
-            critic.initialize_eligibility(prev_state)
+            if len(next_legal_actions) == 0:
+                print('You lost..')
+                losses += 1
+                break
 
-            for action in legal_actions:
-                critic.approximator.compute_state_value(prev_state, td_error, critic.eligibilities)
-                critic.update_eligibility(prev_state)
+            next_action: UniversalAction = actor.generate_action(next_state, next_legal_actions)
+            print(next_action)
+            print(str(next_state))
 
-                # Continue here with line 6c in algo
+            actor.initialize_eligibility(state, action)
+
+            td_error: float = critic.compute_temporal_difference_error(state, next_state, reinforcement)
+
+            critic.initialize_eligibility(state)
+
+            for legal_action in legal_actions:
+                critic.approximator.compute_state_value(state, td_error, critic.eligibilities)
+                critic.update_eligibility(state)
+
+                actor.compute_policy(state, legal_action, td_error)
+                actor.update_eligibility(state, legal_action)
+
+            state = next_state
+            action = next_action
+            legal_actions = next_legal_actions
+
+            # env.visualize(False)
+            # plt.pause(0.01)
+            #user_input = input('Enter any key to continue, q to quit: ')
+            # if user_input == 'q':
+            #    break
+
+        env.reset()
+
+    print(f'wins: {wins}, losses: {losses}')
+    plt.close()
 
 
 def normal_game():
     env = HexagonalGrid()
 
-    env.visualize()
+    env.visualize(False)
 
     while True:
         # Check win condition
@@ -77,10 +109,8 @@ def normal_game():
 
         if first_input == 'undo':
             print('Action reversed')
-            print(env.state.get_empty_nodes())
             env.undo_action()
-            print(env.state.get_empty_nodes())
-            env.visualize()
+            env.visualize(False)
             continue
 
         try:
@@ -95,7 +125,7 @@ def normal_game():
             continue
 
         env.execute_action((start_node, end_node))
-        env.visualize()
+        env.visualize(False)
 
     plt.close()
 
