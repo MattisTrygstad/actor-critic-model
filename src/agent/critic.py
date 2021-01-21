@@ -19,7 +19,7 @@ class Critic:
         if str(state) not in self.approximator.state_values:
             self.approximator.initialize_state_value(state)
 
-        return reinforcement + Config.critic_discount_factor * self.approximator.state_values[prev_state] - self.approximator.state_values[state]
+        return reinforcement + Config.critic_discount_factor * self.approximator.state_values[str(prev_state)] - self.approximator.state_values[str(state)]
 
     def reset_eligibilies(self) -> None:
         self.eligibilities = {}

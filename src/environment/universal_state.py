@@ -1,7 +1,7 @@
 
 class UniversalState():
     """
-    Superclass for representing the state in any game. This way the environment and agent is completely decoupled.
+    Superclass for representing the state in any game. This contributes to decoupling of the environment and the agent.
     """
 
     def __init__(self) -> None:
