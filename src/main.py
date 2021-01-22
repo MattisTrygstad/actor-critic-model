@@ -16,7 +16,78 @@ def main():
         normal_game()
         return
     else:
-        actor_critic_game()
+        new_actor_critic_game()
+        # actor_critic_game()
+
+
+def new_actor_critic_game():
+    env = HexagonalGrid()
+    critic = Critic(TableApproximator())
+    actor = Actor()
+
+    # Exploration vs. exploitation configuration
+    initial_epsilon = Config.epsilon
+    epsilon = initial_epsilon
+    epsilon_decay = epsilon / Config.episodes
+
+    # Statistics
+    wins = 0
+    losses = 0
+    remaining_nodes = []
+
+    for episode in range(Config.episodes):
+        env.reset()
+        epsilon = initial_epsilon - epsilon_decay * episode
+
+        state: UniversalState = env.get_state()
+        action: UniversalAction = actor.generate_action(state, env.get_legal_actions(), epsilon)
+
+        history = []
+
+        while True:
+            reinforcement = env.execute_action(action)
+
+            if env.check_win_condition():
+                wins += 1
+                break
+
+            if len(env.get_legal_actions()) == 0:
+                losses += 1
+                break
+
+            next_state = env.get_state()
+            next_legal_actions = env.get_legal_actions()
+            next_action = actor.generate_action(next_state, next_legal_actions, epsilon)
+
+            actor.set_eligibility(state, action, 1)
+
+            td_error = critic.compute_temporal_difference_error(state, next_state, reinforcement)
+
+            critic.set_eligibility(state, 1)
+
+            history.append((state, action))
+
+            for num, [s, a] in enumerate(history):
+
+                critic.compute_state_value(s, td_error)
+
+                critic.set_eligibility(s, Config.critic_discount_factor * Config.critic_decay_rate * critic.eligibilities[str(s)])
+
+                actor.compute_policy(s, a, td_error)
+
+                actor.set_eligibility(s, a, Config.actor_discount_factor * Config.actor_decay_rate * actor.eligibilities[str(s)][str(a)])
+
+            state = next_state
+            action = next_action
+
+        remaining_nodes.append(len(env.state.get_occupied_nodes()))
+        print(f'Episode: {episode}, wins: {wins}, losses: {losses}, epsilon: {round(epsilon, 5)}')
+
+    plt.close()
+
+    plt.plot(remaining_nodes)
+    plt.ylabel('Remaining nodes')
+    plt.show()
 
 
 def actor_critic_game():
