@@ -9,23 +9,23 @@ class Critic:
 
     def __init__(self, approximator: Approximator) -> None:
         self.approximator = approximator  # Table or NN
-        self.state_values = {}  # V(s)
         self.eligibilities = {}  # State-based eligibilities
 
-    def compute_temporal_difference_error(self, prev_state: UniversalState, state: UniversalAction, reinforcement: int) -> float:
-        if str(prev_state) not in self.approximator.state_values:
-            self.approximator.initialize_state_value(prev_state)
+    def compute_temporal_difference_error(self, state: UniversalState, next_state: UniversalAction, reinforcement: int) -> float:
+        return reinforcement + Config.critic_discount_factor * self.approximator.state_values[str(state)] - self.approximator.state_values[str(next_state)]
 
-        if str(state) not in self.approximator.state_values:
-            self.approximator.initialize_state_value(state)
+    def compute_state_values(self, temporal_difference_error: float) -> None:
+        self.approximator.compute_state_values(temporal_difference_error, self.eligibilities)
 
-        return reinforcement + Config.critic_discount_factor * self.approximator.state_values[str(prev_state)] - self.approximator.state_values[str(state)]
+    def initialize_state_value(self, state: UniversalState) -> None:
+        self.approximator.initialize_state_value(state)
 
     def reset_eligibilies(self) -> None:
-        self.eligibilities = {}
+        self.eligibilities.clear()
 
-    def initialize_eligibility(self, state: UniversalState):
-        self.eligibilities[str(state)] = 1
+    def set_eligibility(self, state: UniversalState, value: int):
+        self.eligibilities[str(state)] = value
 
-    def update_eligibility(self, state: UniversalState):
-        self.eligibilities[str(state)] = Config.critic_discount_factor * Config.critic_decay_rate * self.eligibilities[str(state)]
+    def decay_eligibilies(self):
+        for key, eligibility in self.eligibilities.items():
+            self.eligibilities[key] = Config.critic_discount_factor * Config.critic_decay_rate * eligibility
