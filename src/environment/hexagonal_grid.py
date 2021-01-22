@@ -1,6 +1,7 @@
 
 from copy import deepcopy
 from matplotlib import pyplot as plt
+import numpy as np
 from abstract_classes.environment import Environment
 from enums import BoardType, Color, NodeState
 import networkx as nx
@@ -27,6 +28,8 @@ class HexagonalGrid(Environment):
         self.G.add_nodes_from(self.state.nodes)
         self.G.add_edges_from(self.state.edges)
 
+        self.initial_nodes = len(self.state.get_occupied_nodes())
+
     def execute_action(self, action: UniversalAction) -> int:
         self.history.append(deepcopy(self.state.nodes))
 
@@ -46,6 +49,10 @@ class HexagonalGrid(Environment):
             return Config.loss_reward
         else:
             return Config.action_reward
+
+        """ reward = np.tanh(2 * ((self.initial_nodes / 8) - len(self.state.get_occupied_nodes()))) + 1 * (np.sum(len(self.state.get_occupied_nodes())) == 1)
+
+        return reward """
 
     def undo_action(self) -> None:
         if self.history:

@@ -16,8 +16,9 @@ class Actor:
         self.eligibilities.clear()
 
     def set_eligibility(self, state: UniversalState, action: UniversalAction, value: int) -> None:
-        key = self.__generate_state_action_pair_key(state, action)
-        self.eligibilities[key] = value
+        self.eligibilities.setdefault(str(state), {})[str(action)] = value
+        #key = self.__generate_state_action_pair_key(state, action)
+        #self.eligibilities[key] = value
 
     def decay_eligibilities(self) -> None:
         for key, eligibility in self.eligibilities.items():
@@ -37,11 +38,9 @@ class Actor:
         else:
             action_policies = {}
             for action in legal_actions:
-                key = self.__generate_state_action_pair_key(state, action)
-                if key not in self.policies:
-                    self.policies[key] = 0
+                self.policies.setdefault(str(state), {}).setdefault(str(action), 0)
 
-                action_policies[action] = self.policies[key]
+                action_policies[action] = self.policies[str(state)][str(action)]
 
             chosen_action = max(action_policies, key=action_policies.get)
 
@@ -55,6 +54,10 @@ class Actor:
                 self.policies[key] = 0
 
             self.policies[key] += Config.actor_learning_rate * td_error * eligibility
+
+    def compute_policy(self, state: UniversalState, action: UniversalAction, td_error: float) -> None:
+        value = self.policies.setdefault(str(state), {}).setdefault(str(action), 0)
+        self.policies[str(state)][str(action)] = value + Config.actor_learning_rate * self.eligibilities[str(state)][str(action)] * td_error
 
     def __generate_state_action_pair_key(self, state: UniversalState, action: UniversalAction) -> str:
         return f'state: {str(state)}, action: {str(action)}'
