@@ -42,13 +42,13 @@ def actor_critic_game():
         legal_actions = env.get_legal_actions()
 
         actor.initialize_state_action_pairs(state, legal_actions)
-        critic.set_eligibility(state, 1)
         critic.initialize_state_value(state)
 
         epsilon = initial_epsilon - epsilon_decay * episode
         action: UniversalAction = actor.generate_action(state, legal_actions, epsilon)
 
-        actor.set_eligibility(state, action, 1)
+        #critic.set_eligibility(state, 1)
+        #actor.set_eligibility(state, action, 1)
 
         while True:
             reinforcement = env.execute_action(action)
@@ -68,10 +68,11 @@ def actor_critic_game():
 
             next_action: UniversalAction = actor.generate_action(next_state, next_legal_actions, epsilon)
 
-            actor.set_eligibility(next_state, next_action, 1)
-            critic.set_eligibility(next_state, 1)
+            actor.set_eligibility(state, action, 1)
 
             td_error: float = critic.compute_temporal_difference_error(state, next_state, reinforcement)
+
+            critic.set_eligibility(state, 1)
 
             # for all (s,a) pairs
             critic.compute_state_values(td_error)
