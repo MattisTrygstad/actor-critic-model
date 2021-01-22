@@ -43,10 +43,12 @@ def actor_critic_game():
 
         actor.initialize_state_action_pairs(state, legal_actions)
         critic.set_eligibility(state, 1)
-        critic.approximator.initialize_state_value(state)
+        critic.initialize_state_value(state)
 
         epsilon = initial_epsilon - epsilon_decay * episode
         action: UniversalAction = actor.generate_action(state, legal_actions, epsilon)
+
+        actor.set_eligibility(state, action, 1)
 
         while True:
             reinforcement = env.execute_action(action)
@@ -54,7 +56,7 @@ def actor_critic_game():
             next_legal_actions = env.get_legal_actions()
 
             actor.initialize_state_action_pairs(next_state, next_legal_actions)
-            critic.approximator.initialize_state_value(next_state)
+            critic.initialize_state_value(next_state)
 
             if env.check_win_condition():
                 wins += 1
@@ -66,13 +68,13 @@ def actor_critic_game():
 
             next_action: UniversalAction = actor.generate_action(next_state, next_legal_actions, epsilon)
 
-            actor.set_eligibility(next_state, next_action)
+            actor.set_eligibility(next_state, next_action, 1)
             critic.set_eligibility(next_state, 1)
 
             td_error: float = critic.compute_temporal_difference_error(state, next_state, reinforcement)
 
             # for all (s,a) pairs
-            critic.approximator.compute_state_values(td_error, critic.eligibilities)
+            critic.compute_state_values(td_error)
             critic.decay_eligibilies()
             actor.compute_policies(td_error)
             actor.decay_eligibilities()
@@ -81,11 +83,14 @@ def actor_critic_game():
             action = next_action
             legal_actions = next_legal_actions
 
-            # env.visualize(False)
-            # plt.pause(0.01)
-            #user_input = input('Enter any key to continue, q to quit: ')
-            # if user_input == 'q':
-            #    break
+            """ env.visualize(False)
+            plt.pause(0.01)
+            print('actor eli:', actor.eligibilities)
+            print('critic eli:', critic.eligibilities)
+
+            user_input = input('Enter any key to continue, q to quit: ')
+            if user_input == 'q':
+                break """
 
         print(f'Episode: {episode}, wins: {wins}, losses: {losses}, epsilon: {round(epsilon, 5)}')
         remaining_nodes.append(len(env.state.get_occupied_nodes()))

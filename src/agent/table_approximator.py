@@ -12,8 +12,8 @@ class TableApproximator(Approximator):
 
     def compute_state_values(self, temporal_difference_error: float, eligibilities: dict) -> None:
         for key, eligibility in eligibilities.items():
-            self.state_values[key] += Config.actor_learning_rate * temporal_difference_error * eligibility
+            self.state_values[key] += Config.critic_learning_rate * temporal_difference_error * eligibility
 
     def initialize_state_value(self, state: UniversalState) -> None:
         if str(state) not in self.state_values:
-            self.state_values[str(state)] = np.random.uniform(0, 1)
+            self.state_values[str(state)] = np.random.uniform(-0.1, 0.1)

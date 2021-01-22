@@ -9,11 +9,16 @@ class Critic:
 
     def __init__(self, approximator: Approximator) -> None:
         self.approximator = approximator  # Table or NN
-        self.state_values = {}  # V(s)
         self.eligibilities = {}  # State-based eligibilities
 
     def compute_temporal_difference_error(self, state: UniversalState, next_state: UniversalAction, reinforcement: int) -> float:
         return reinforcement + Config.critic_discount_factor * self.approximator.state_values[str(state)] - self.approximator.state_values[str(next_state)]
+
+    def compute_state_values(self, temporal_difference_error: float) -> None:
+        self.approximator.compute_state_values(temporal_difference_error, self.eligibilities)
+
+    def initialize_state_value(self, state: UniversalState) -> None:
+        self.approximator.initialize_state_value(state)
 
     def reset_eligibilies(self) -> None:
         self.eligibilities.clear()
