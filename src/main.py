@@ -21,12 +21,18 @@ def main():
 
 def actor_critic_game():
     env = HexagonalGrid()
-
     critic = Critic(TableApproximator())
     actor = Actor()
 
+    # Exploration vs. exploitation configuration
+    initial_epsilon = Config.epsilon
+    epsilon = initial_epsilon
+    epsilon_decay = epsilon / Config.episodes
+
+    # Statistics
     wins = 0
     losses = 0
+    remaining_nodes = []
 
     for episode in range(Config.episodes):
         critic.reset_eligibilies()
@@ -35,39 +41,41 @@ def actor_critic_game():
         state: UniversalState = env.get_state()
         legal_actions = env.get_legal_actions()
 
-        action: UniversalAction = actor.generate_action(state, legal_actions)
+        actor.initialize_state_action_pairs(state, legal_actions)
+        critic.set_eligibility(state, 1)
+        critic.approximator.initialize_state_value(state)
+
+        epsilon = initial_epsilon - epsilon_decay * episode
+        action: UniversalAction = actor.generate_action(state, legal_actions, epsilon)
 
         while True:
             reinforcement = env.execute_action(action)
             next_state: UniversalState = env.get_state()
             next_legal_actions = env.get_legal_actions()
 
+            actor.initialize_state_action_pairs(next_state, next_legal_actions)
+            critic.approximator.initialize_state_value(next_state)
+
             if env.check_win_condition():
-                print('You won!')
                 wins += 1
                 break
 
             if len(next_legal_actions) == 0:
-                print('You lost..')
                 losses += 1
                 break
 
-            next_action: UniversalAction = actor.generate_action(next_state, next_legal_actions)
-            print(next_action)
-            print(str(next_state))
+            next_action: UniversalAction = actor.generate_action(next_state, next_legal_actions, epsilon)
 
-            actor.initialize_eligibility(state, action)
+            actor.set_eligibility(next_state, next_action)
+            critic.set_eligibility(next_state, 1)
 
             td_error: float = critic.compute_temporal_difference_error(state, next_state, reinforcement)
 
-            critic.initialize_eligibility(state)
-
-            for legal_action in legal_actions:
-                critic.approximator.compute_state_value(state, td_error, critic.eligibilities)
-                critic.update_eligibility(state)
-
-                actor.compute_policy(state, legal_action, td_error)
-                actor.update_eligibility(state, legal_action)
+            # for all (s,a) pairs
+            critic.approximator.compute_state_values(td_error, critic.eligibilities)
+            critic.decay_eligibilies()
+            actor.compute_policies(td_error)
+            actor.decay_eligibilities()
 
             state = next_state
             action = next_action
@@ -79,10 +87,15 @@ def actor_critic_game():
             # if user_input == 'q':
             #    break
 
+        print(f'Episode: {episode}, wins: {wins}, losses: {losses}, epsilon: {round(epsilon, 5)}')
+        remaining_nodes.append(len(env.state.get_occupied_nodes()))
         env.reset()
 
-    print(f'wins: {wins}, losses: {losses}')
     plt.close()
+
+    plt.plot(remaining_nodes)
+    plt.ylabel('Remaining nodes')
+    plt.show()
 
 
 def normal_game():
@@ -124,7 +137,9 @@ def normal_game():
             print('Illegal move, try again!')
             continue
 
-        env.execute_action((start_node, end_node))
+        action = UniversalAction()
+        action.action = (start_node, end_node)
+        env.execute_action(action)
         env.visualize(False)
 
     plt.close()

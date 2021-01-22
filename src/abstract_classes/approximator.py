@@ -14,7 +14,7 @@ class Approximator(ABC):
         self.state_values = {}
 
     @abstractmethod
-    def compute_state_value(self, state: UniversalState, temporal_difference_error: float, eligibilities: dict) -> None:
+    def compute_state_values(self, temporal_difference_error: float, eligibilities: dict) -> None:
         pass
 
     @abstractmethod
