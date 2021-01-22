@@ -18,5 +18,9 @@ class Approximator(ABC):
         pass
 
     @abstractmethod
+    def compute_state_value(self, state: UniversalState, td_error: float, eligibilities: dict) -> None:
+        pass
+
+    @abstractmethod
     def initialize_state_value(self, state_str: str) -> None:
         pass
