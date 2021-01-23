@@ -3,11 +3,14 @@ import random
 from typing import Tuple
 from environment.universal_action import UniversalAction
 from environment.universal_state import UniversalState
-from utils.config_parser import Config
 
 
 class Actor:
-    def __init__(self) -> None:
+    def __init__(self, actor_discount_factor: float, actor_decay_rate: float, actor_learning_rate: float) -> None:
+        self.actor_discount_factor = actor_discount_factor
+        self.actor_decay_rate = actor_decay_rate
+        self.actor_learning_rate = actor_learning_rate
+
         self.policies = {}  # Pi(s)
         self.eligibilities = {}  # SAP-based eligibilities
         self.state = None
@@ -22,7 +25,7 @@ class Actor:
 
     def decay_eligibilities(self) -> None:
         for key, eligibility in self.eligibilities.items():
-            self.eligibilities[key] = Config.actor_discount_factor * Config.actor_decay_rate * eligibility
+            self.eligibilities[key] = self.actor_discount_factor * self.actor_decay_rate * eligibility
 
     def initialize_state_action_pairs(self, state: UniversalState, legal_actions: UniversalAction) -> None:
         for action in legal_actions:
@@ -55,11 +58,11 @@ class Actor:
             if key not in self.policies:
                 self.policies[key] = 0
 
-            self.policies[key] += Config.actor_learning_rate * td_error * eligibility
+            self.policies[key] += self.actor_learning_rate * td_error * eligibility
 
     def compute_policy(self, state: UniversalState, action: UniversalAction, td_error: float) -> None:
         value = self.policies.setdefault(str(state), {}).setdefault(str(action), 0)
-        self.policies[str(state)][str(action)] = value + Config.actor_learning_rate * self.eligibilities[str(state)][str(action)] * td_error
+        self.policies[str(state)][str(action)] = value + self.actor_learning_rate * self.eligibilities[str(state)][str(action)] * td_error
 
     def __generate_state_action_pair_key(self, state: UniversalState, action: UniversalAction) -> str:
         return f'state: {str(state)}, action: {str(action)}'
