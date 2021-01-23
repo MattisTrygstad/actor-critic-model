@@ -15,7 +15,7 @@ from utils.config_parser import Config
 
 class HexagonalGrid(Environment):
 
-    def __init__(self):
+    def __init__(self, win_multiplier: int):
         self.state = HexagonalGridState()
         self.history = []
 
@@ -29,6 +29,7 @@ class HexagonalGrid(Environment):
         self.G.add_edges_from(self.state.edges)
 
         self.initial_nodes = len(self.state.get_occupied_nodes())
+        self.win_multiplier = win_multiplier
 
     def execute_action(self, action: UniversalAction) -> int:
         self.history.append(deepcopy(self.state.nodes))
@@ -44,10 +45,10 @@ class HexagonalGrid(Environment):
         self.state.nodes[end_node] = NodeState.OCCUPIED.value
 
         if self.check_win_condition():
-            reinforcement = Config.win_reward * 2
+            reinforcement = Config.win_reward * self.win_multiplier
         else:
-            reinforcement = Config.win_reward / (len(self.state.get_occupied_nodes()))
-        # print(reinforcement)
+            reinforcement = Config.win_reward / (len(self.state.get_occupied_nodes()) - 1)
+
         return reinforcement
 
     def undo_action(self) -> None:

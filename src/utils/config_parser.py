@@ -13,10 +13,12 @@ class Config:
     actor_learning_rates = list(ast.literal_eval(config.get('parameters', 'actor_learning_rates')))
     critic_learning_rates = list(ast.literal_eval(config.get('parameters', 'critic_learning_rates')))
     iterations = int(config.get('parameters', 'iterations'))
+    win_multipliers = list(ast.literal_eval(config.get('parameters', 'win_multipliers')))
 
     action_reward = float(config.get('parameters', 'action_reward'))
     win_reward = int(config.get('parameters', 'win_reward'))
     loss_reward = int(config.get('parameters', 'loss_reward'))
+    win_multiplier = int(config.get('parameters', 'win_multiplier'))
     board_type = int(config.get('parameters', 'board_type'))
     board_size = int(config.get('parameters', 'board_size'))
     empty_nodes = list(ast.literal_eval(config.get('parameters', 'empty_nodes')))
