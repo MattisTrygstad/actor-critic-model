@@ -2,12 +2,15 @@
 from abstract_classes.approximator import Approximator
 from environment.universal_action import UniversalAction
 from environment.universal_state import UniversalState
-from utils.config_parser import Config
 
 
 class Critic:
 
-    def __init__(self, approximator: Approximator) -> None:
+    def __init__(self, approximator: Approximator, critic_discount_factor: float, critic_decay_rate, critic_learning_rate: float) -> None:
+        self.critic_discount_factor = critic_discount_factor
+        self.critic_decay_rate = critic_decay_rate
+        self.critic_learning_rate = critic_learning_rate
+
         self.approximator = approximator  # Table or NN
         self.eligibilities = {}  # State-based eligibilities
 
@@ -15,14 +18,14 @@ class Critic:
         self.approximator.initialize_state_value(state)
         self.approximator.initialize_state_value(next_state)
 
-        return reinforcement + Config.critic_discount_factor * self.approximator.state_values[str(state)] - self.approximator.state_values[str(state)]
+        return reinforcement + self.critic_discount_factor * self.approximator.state_values[str(state)] - self.approximator.state_values[str(state)]
 
     def compute_state_values(self, temporal_difference_error: float) -> None:
-        self.approximator.compute_state_values(temporal_difference_error, self.eligibilities)
+        self.approximator.compute_state_values(temporal_difference_error, self.eligibilities, self.critic_learning_rate)
 
     # new
     def compute_state_value(self, state: UniversalState, td_error: float) -> None:
-        self.approximator.compute_state_value(state, td_error, self.eligibilities)
+        self.approximator.compute_state_value(state, td_error, self.eligibilities, self.critic_learning_rate)
 
     def initialize_state_value(self, state: UniversalState) -> None:
         self.approximator.initialize_state_value(state)
@@ -35,4 +38,4 @@ class Critic:
 
     def decay_eligibilies(self):
         for key, eligibility in self.eligibilities.items():
-            self.eligibilities[key] = Config.critic_discount_factor * Config.critic_decay_rate * eligibility
+            self.eligibilities[key] = self.critic_discount_factor * self.critic_decay_rate * eligibility
