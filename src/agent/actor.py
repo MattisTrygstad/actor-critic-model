@@ -31,9 +31,11 @@ class Actor:
                 self.eligibilities[key] = 0
 
     def generate_action(self, state: UniversalState, legal_actions: list, epsilon: float) -> UniversalAction:
-        if random.uniform(0, 1) > epsilon:
+        random_action = False
+        if random.uniform(0, 1) < epsilon:
             random_index = random.randint(0, len(legal_actions) - 1)
             chosen_action = legal_actions[random_index]
+            random_action = True
 
         else:
             action_policies = {}
@@ -46,7 +48,7 @@ class Actor:
 
         universal_action = UniversalAction()
         universal_action.action = chosen_action
-        return universal_action
+        return universal_action, random_action
 
     def compute_policies(self, td_error: float) -> None:
         for key, eligibility in self.eligibilities.items():
