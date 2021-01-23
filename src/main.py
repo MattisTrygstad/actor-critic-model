@@ -34,18 +34,22 @@ def new_actor_critic_game():
     wins = 0
     losses = 0
     remaining_nodes = []
+    random_moves = []
 
     for episode in range(Config.episodes):
         env.reset()
         epsilon = initial_epsilon - epsilon_decay * episode
 
         state: UniversalState = env.get_state()
-        action: UniversalAction = actor.generate_action(state, env.get_legal_actions(), epsilon)
+        action, random = actor.generate_action(state, env.get_legal_actions(), epsilon)
 
         history = []
+        random_count = 0
 
         while True:
             reinforcement = env.execute_action(action)
+            if random:
+                random_count += 1
 
             if env.check_win_condition():
                 wins += 1
@@ -57,7 +61,7 @@ def new_actor_critic_game():
 
             next_state = env.get_state()
             next_legal_actions = env.get_legal_actions()
-            next_action = actor.generate_action(next_state, next_legal_actions, epsilon)
+            next_action, random = actor.generate_action(next_state, next_legal_actions, epsilon)
 
             actor.set_eligibility(state, action, 1)
 
@@ -79,12 +83,12 @@ def new_actor_critic_game():
 
             state = next_state
             action = next_action
-
+        random_moves.append(random_count)
         remaining_nodes.append(len(env.state.get_occupied_nodes()))
         print(f'Episode: {episode}, wins: {wins}, losses: {losses}, epsilon: {round(epsilon, 5)}')
 
     plt.close()
-
+    # plt.plot(random_moves)
     plt.plot(remaining_nodes)
     plt.ylabel('Remaining nodes')
     plt.show()
