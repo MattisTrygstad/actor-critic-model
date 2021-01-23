@@ -44,15 +44,11 @@ class HexagonalGrid(Environment):
         self.state.nodes[end_node] = NodeState.OCCUPIED.value
 
         if self.check_win_condition():
-            return Config.win_reward
-        elif len(self.get_legal_actions()) == 0:
-            return Config.loss_reward
+            reinforcement = Config.win_reward
         else:
-            return Config.action_reward
-
-        """ reward = np.tanh(2 * ((self.initial_nodes / 8) - len(self.state.get_occupied_nodes()))) + 1 * (np.sum(len(self.state.get_occupied_nodes())) == 1)
-
-        return reward """
+            reinforcement = Config.win_reward / (len(self.state.get_occupied_nodes()) - 1)
+        # print(reinforcement)
+        return reinforcement
 
     def undo_action(self) -> None:
         if self.history:
