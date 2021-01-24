@@ -23,7 +23,7 @@ def main():
         run_experiments()
 
     else:
-        actor_critic_game(Config.actor_learning_rate, Config.critic_learning_rate, Config.actor_decay_rate, Config.critic_decay_rate, Config.actor_discount_factor, Config.critic_discount_factor, Config.linear_epsilon, Config.win_multiplier, True)
+        actor_critic_game(Config.actor_learning_rate, Config.critic_learning_rate, Config.actor_decay_rate, Config.critic_decay_rate, Config.actor_discount_factor, Config.critic_discount_factor, Config.linear_epsilon, Config.win_multiplier, Config.epsilon, Config.exploitation_threshold, True)
 
 
 def run_experiments() -> None:
@@ -31,9 +31,12 @@ def run_experiments() -> None:
     critic_learnig_rates = Config.critic_learning_rates
     win_multipliers = Config.win_multipliers
     epsilon_functions = Config.epsilon_functions
+    initial_epsilons = Config.initial_epsilons
+    exploitation_thresholds = Config.exploitation_thresholds
+
     iterations = Config.iterations
 
-    total = len(actor_learnig_rates) * len(critic_learnig_rates) * len(win_multipliers) * len(epsilon_functions) * iterations
+    total = len(actor_learnig_rates) * len(critic_learnig_rates) * len(win_multipliers) * len(epsilon_functions) * len(initial_epsilons) * len(exploitation_thresholds) * iterations
 
     count = 1
     estimated_run_time = 0
@@ -42,33 +45,35 @@ def run_experiments() -> None:
         for critic_learning_rate in critic_learnig_rates:
             for multiplier in win_multipliers:
                 for function in epsilon_functions:
-                    if function == 0:
-                        linear_epsilon = False
-                    else:
-                        linear_epsilon = True
+                    for epsilon in initial_epsilons:
+                        for threshold in exploitation_thresholds:
+                            if function == 0:
+                                linear_epsilon = False
+                            else:
+                                linear_epsilon = True
 
-                    training_wins = []
-                    test_wins = []
+                            training_wins = []
+                            test_wins = []
 
-                    for x in range(iterations):
-                        start = time.time()
-                        print(f'Experiment progress: {count}/{total}, estimated run time: {str(timedelta(seconds=estimated_run_time))}')
-                        training, test = actor_critic_game(actor_learning_rate, critic_learning_rate, Config.actor_decay_rate, Config.critic_decay_rate, Config.actor_discount_factor, Config.critic_discount_factor, linear_epsilon, multiplier, False)
+                            for x in range(iterations):
+                                start = time.time()
+                                print(f'Experiment progress: {count}/{total}, estimated run time: {str(timedelta(seconds=estimated_run_time))}')
+                                training, test = actor_critic_game(actor_learning_rate, critic_learning_rate, Config.actor_decay_rate, Config.critic_decay_rate, Config.actor_discount_factor, Config.critic_discount_factor, linear_epsilon, multiplier, epsilon, threshold, False)
 
-                        training_wins.append(training)
-                        test_wins.append(test)
+                                training_wins.append(training)
+                                test_wins.append(test)
 
-                        count += 1
+                                count += 1
 
-                        end = time.time()
-                        estimated_run_time = (end - start) * (total - count)
+                                end = time.time()
+                                estimated_run_time = (end - start) * (total - count)
 
-                    f = open('../experiment_results.txt', 'a')
-                    f.write(f'{actor_learning_rate},{critic_learning_rate},{multiplier},{linear_epsilon},{round(mean(training_wins), 2)},{round(median(training_wins),2)},{round(mean(test_wins), 2)},{round(median(test_wins),2)}\n')
-                    f.close()
+                            f = open('../experiment_results.txt', 'a')
+                            f.write(f'{actor_learning_rate},{critic_learning_rate},{multiplier},{linear_epsilon},{epsilon},{threshold},{round(mean(training_wins), 2)},{round(median(training_wins),2)},{round(mean(test_wins), 2)},{round(median(test_wins),2)}\n')
+                            f.close()
 
 
-def actor_critic_game(actor_learning_rate: float, critic_learning_rate: float, actor_decay_rate: float, critic_decay_rate: float, actor_discount_factor: float, critic_discount_factor: float, linear_epsilon: bool, win_multiplier: int, visualize: bool) -> int:
+def actor_critic_game(actor_learning_rate: float, critic_learning_rate: float, actor_decay_rate: float, critic_decay_rate: float, actor_discount_factor: float, critic_discount_factor: float, linear_epsilon: bool, win_multiplier: int, initial_epsilon: float, exploitation_start: int, visualize: bool) -> int:
 
     env = HexagonalGrid(win_multiplier)
     approximator = TableApproximator()
@@ -76,7 +81,6 @@ def actor_critic_game(actor_learning_rate: float, critic_learning_rate: float, a
     actor = Actor(actor_discount_factor, actor_decay_rate, actor_learning_rate)
 
     # Exploration vs. exploitation configuration
-    initial_epsilon = Config.epsilon
     epsilon = initial_epsilon
     epsilon_linear = epsilon / Config.episodes
 
@@ -94,9 +98,11 @@ def actor_critic_game(actor_learning_rate: float, critic_learning_rate: float, a
             # No exploration during final model test
             epsilon = 0
         elif linear_epsilon:
-            epsilon = initial_epsilon - epsilon_linear * episode
+            if training_wins >= exploitation_start:
+                epsilon = initial_epsilon - epsilon_linear * episode
         else:
-            epsilon *= Config.epsilon_decay
+            if training_wins >= exploitation_start:
+                epsilon *= Config.epsilon_decay
 
         state: UniversalState = env.get_state()
         action, random = actor.generate_action(state, env.get_legal_actions(), epsilon)
@@ -132,15 +138,15 @@ def actor_critic_game(actor_learning_rate: float, critic_learning_rate: float, a
 
             history.append((state, action))
 
-            for num, [s, a] in enumerate(history):
+            for encountered_state, encountered_action in history:
 
-                critic.compute_state_value(s, td_error)
+                critic.compute_state_value(encountered_state, td_error)
 
-                critic.set_eligibility(s, Config.critic_discount_factor * Config.critic_decay_rate * critic.eligibilities[str(s)])
+                critic.set_eligibility(encountered_state, Config.critic_discount_factor * Config.critic_decay_rate * critic.eligibilities[str(encountered_state)])
 
-                actor.compute_policy(s, a, td_error)
+                actor.compute_policy(encountered_state, encountered_action, td_error)
 
-                actor.set_eligibility(s, a, Config.actor_discount_factor * Config.actor_decay_rate * actor.eligibilities[str(s)][str(a)])
+                actor.set_eligibility(encountered_state, encountered_action, Config.actor_discount_factor * Config.actor_decay_rate * actor.eligibilities[str(encountered_state)][str(encountered_action)])
 
             state = next_state
             action = next_action
