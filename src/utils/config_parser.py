@@ -15,6 +15,8 @@ class Config:
     iterations = int(config.get('parameters', 'iterations'))
     win_multipliers = list(ast.literal_eval(config.get('parameters', 'win_multipliers')))
     epsilon_functions = list(ast.literal_eval(config.get('parameters', 'epsilon_functions')))
+    initial_epsilons = list(ast.literal_eval(config.get('parameters', 'initial_epsilons')))
+    exploitation_thresholds = list(ast.literal_eval(config.get('parameters', 'exploitation_thresholds')))
 
     action_reward = float(config.get('parameters', 'action_reward'))
     win_reward = int(config.get('parameters', 'win_reward'))
@@ -37,6 +39,7 @@ class Config:
     critic_discount_factor = float(config.get('parameters', 'critic_discount_factor'))
 
     linear_epsilon = bool(ast.literal_eval(config.get('parameters', 'linear_epsilon')))
+    exploitation_threshold = int(config.get('parameters', 'exploitation_threshold'))
     epsilon = float(config.get('parameters', 'epsilon'))
     epsilon_decay = float(config.get('parameters', 'epsilon_decay'))
 
