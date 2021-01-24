@@ -14,6 +14,7 @@ class Config:
     critic_learning_rates = list(ast.literal_eval(config.get('parameters', 'critic_learning_rates')))
     iterations = int(config.get('parameters', 'iterations'))
     win_multipliers = list(ast.literal_eval(config.get('parameters', 'win_multipliers')))
+    epsilon_functions = list(ast.literal_eval(config.get('parameters', 'epsilon_functions')))
 
     action_reward = float(config.get('parameters', 'action_reward'))
     win_reward = int(config.get('parameters', 'win_reward'))
