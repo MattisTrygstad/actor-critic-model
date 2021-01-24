@@ -30,25 +30,25 @@ def run_experiments() -> None:
     actor_learnig_rates = Config.actor_learning_rates
     critic_learnig_rates = Config.critic_learning_rates
     win_multipliers = Config.win_multipliers
+    epsilon_functions = Config.epsilon_functions
     iterations = Config.iterations
 
-    total = len(actor_learnig_rates) * len(critic_learnig_rates) * len(win_multipliers) * iterations * 2
+    total = len(actor_learnig_rates) * len(critic_learnig_rates) * len(win_multipliers) * len(epsilon_functions) * iterations
+
     count = 1
+    estimated_run_time = 0
 
     for actor_learning_rate in actor_learnig_rates:
         for critic_learning_rate in critic_learnig_rates:
             for multiplier in win_multipliers:
-                for x in range(2):
-
-                    if x == 0:
-                        linear_epsilon = True
-                    else:
+                for function in epsilon_functions:
+                    if function == 0:
                         linear_epsilon = False
+                    else:
+                        linear_epsilon = True
 
                     training_wins = []
                     test_wins = []
-
-                    estimated_run_time = 0
 
                     for x in range(iterations):
                         start = time.time()
