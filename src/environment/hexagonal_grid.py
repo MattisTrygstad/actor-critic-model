@@ -74,7 +74,11 @@ class HexagonalGrid(Environment):
     def reset(self) -> None:
         self.state = HexagonalGridState()
 
-    def visualize(self, block: bool) -> None:
+        self.G = nx.Graph()
+        self.G.add_nodes_from(self.state.nodes)
+        self.G.add_edges_from(self.state.edges)
+
+    def visualize(self, block: bool, delay: int = None) -> None:
         plt.cla()
         empty_nodes = self.state.get_empty_nodes()
         occupied_nodes = self.state.get_occupied_nodes()
@@ -98,3 +102,6 @@ class HexagonalGrid(Environment):
         plt.show(block=block)
         self.fig.patch.set_facecolor(Color.WHITE.value)
         plt.pause(0.1)
+
+        if delay:
+            plt.pause(delay)
