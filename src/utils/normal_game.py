@@ -3,10 +3,11 @@ import ast
 from matplotlib import pyplot as plt
 from environment.hexagonal_grid import HexagonalGrid
 from environment.universal_action import UniversalAction
+from utils.config_parser import Config
 
 
 def normal_game():
-    env = HexagonalGrid()
+    env = HexagonalGrid(Config.win_multiplier)
 
     env.visualize(False)
 

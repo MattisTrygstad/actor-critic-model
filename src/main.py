@@ -94,7 +94,7 @@ def actor_critic_game(actor_learning_rate: float, critic_learning_rate: float, a
     for episode in range(Config.episodes + Config.test_episodes):
         env.reset()
 
-        if episode > Config.episodes:
+        if episode >= Config.episodes:
             # No exploration during final model test
             epsilon = 0
         elif linear_epsilon:
@@ -165,11 +165,67 @@ def actor_critic_game(actor_learning_rate: float, critic_learning_rate: float, a
     if visualize:
         print(f'Final model win rate: {test_wins}/{Config.test_episodes} = {round(test_wins/Config.test_episodes*100, 2)}% ')
 
-        plt.plot(remaining_nodes)
-        plt.ylabel('Remaining nodes')
-        plt.show()
+        if test_wins == Config.test_episodes:
+            plt.plot(remaining_nodes)
+            plt.ylabel('Remaining nodes')
+            plt.show()
+
+            plt.close()
+
+            visualize_greedy_episode(actor, critic)
 
     return training_wins, test_wins
+
+
+def visualize_greedy_episode(actor: Actor, critic: Critic):
+    env = HexagonalGrid(Config.win_multiplier)
+
+    epsilon = 0
+
+    state: UniversalState = env.get_state()
+    action, random = actor.generate_action(state, env.get_legal_actions(), epsilon)
+
+    history = []
+    random_count = 0
+
+    while True:
+        reinforcement = env.execute_action(action)
+        env.visualize(False, 2)
+        if random:
+            random_count += 1
+
+        if env.check_win_condition():
+            break
+
+        if len(env.get_legal_actions()) == 0:
+            break
+
+        next_state = env.get_state()
+        next_legal_actions = env.get_legal_actions()
+        next_action, random = actor.generate_action(next_state, next_legal_actions, epsilon)
+
+        actor.set_eligibility(state, action, 1)
+
+        td_error = critic.compute_temporal_difference_error(state, next_state, reinforcement)
+
+        critic.set_eligibility(state, 1)
+
+        history.append((state, action))
+
+        for encountered_state, encountered_action in history:
+
+            critic.compute_state_value(encountered_state, td_error)
+
+            critic.set_eligibility(encountered_state, Config.critic_discount_factor * Config.critic_decay_rate * critic.eligibilities[str(encountered_state)])
+
+            actor.compute_policy(encountered_state, encountered_action, td_error)
+
+            actor.set_eligibility(encountered_state, encountered_action, Config.actor_discount_factor * Config.actor_decay_rate * actor.eligibilities[str(encountered_state)][str(encountered_action)])
+
+        state = next_state
+        action = next_action
+
+    env.visualize(True)
 
 
 if __name__ == "__main__":
