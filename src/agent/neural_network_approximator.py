@@ -4,7 +4,7 @@ from abstract_classes.approximator import Approximator
 from environment.universal_state import UniversalState
 
 
-class TableApproximator(Approximator):
+class NeuralNetworkApproximator(Approximator):
 
     def __init__(self) -> None:
         super().__init__()
