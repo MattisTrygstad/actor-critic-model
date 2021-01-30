@@ -22,8 +22,7 @@ class NeuralNetworkApproximator(Approximator):
         self.decay_rate = decay_rate
 
         self.model = Sequential()
-        # self.model.add(Input(inputSize))
-        self.model.add(Dense(inputSize, activation='relu', input_dim=inputSize))
+        self.model.add(Input(inputSize))
 
         for size in nn_dimentions:
             self.model.add(Dense(size, activation='relu'))
@@ -37,7 +36,7 @@ class NeuralNetworkApproximator(Approximator):
 
     def compute_state_values(self, td_error: float, reinforcement: float, state: UniversalState, next_state: UniversalState) -> None:
         with tf.GradientTape() as gradient_tape:
-            state, next_state, discount_factor, reinforcement = self.__convert_to_tensors(state, next_state, self.discount_factor, reinforcement)
+            state, next_state, discount_factor, reinforcement = NeuralNetworkApproximator.__convert_to_tensors(state, next_state, self.discount_factor, reinforcement)
 
             target_value = tf.add(reinforcement, tf.multiply(discount_factor, self.model(next_state)))
 
@@ -46,7 +45,7 @@ class NeuralNetworkApproximator(Approximator):
 
         gradients = gradient_tape.gradient(loss, self.model.trainable_variables)
 
-        updated_gradients = self.__customize_gradients(gradients, td_error, self.eligibilities)
+        updated_gradients = self.__customize_gradients(gradients, td_error)
 
         self.model.optimizer.apply_gradients(zip(updated_gradients, self.model.trainable_variables))
 
@@ -55,7 +54,7 @@ class NeuralNetworkApproximator(Approximator):
         state_tensor = tf.convert_to_tensor(np.expand_dims(state_array, axis=0))
         return self.model(state_tensor).numpy()[0][0]
 
-    def __convert_to_tensors(self, state: UniversalState, next_state: UniversalState, discount_rate: float, reinforcement: float) -> tuple:
+    def __convert_to_tensors(state: UniversalState, next_state: UniversalState, discount_rate: float, reinforcement: float) -> tuple:
         state_array = [tf.strings.to_number(value, out_type=tf.dtypes.float32) for value in str(state)]
         state_tensor = tf.convert_to_tensor(np.expand_dims(state_array, axis=0))
 
@@ -67,8 +66,11 @@ class NeuralNetworkApproximator(Approximator):
 
         return state_tensor, next_state_tensor, discount_rate_tensor, reinforcement_tensor
 
-    def __customize_gradients(self, gradients: defaultdict, td_error: float, eligibilities: dict) -> tuple:
+    def __customize_gradients(self, gradients: defaultdict, td_error: float) -> tuple:
         for index in range(len(gradients)):
+            if td_error == 0:
+                break
+
             gradients[index] *= 0.5 / td_error
             self.eligibilities[index] += gradients[index]
             gradients[index] = self.eligibilities[index] * td_error
