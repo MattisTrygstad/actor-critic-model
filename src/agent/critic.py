@@ -1,5 +1,6 @@
 
 from abstract_classes.approximator import Approximator
+from agent.table_approximator import TableApproximator
 from environment.universal_action import UniversalAction
 from environment.universal_state import UniversalState
 
@@ -10,10 +11,10 @@ class Critic:
         self.approximator = approximator  # Table or NN
 
     def compute_temporal_difference_error(self, state: UniversalState, next_state: UniversalAction, reinforcement: int) -> float:
-        self.approximator.initialize_state_value(state)
-        self.approximator.initialize_state_value(next_state)
+        state_value = self.approximator.get_state_value(state)
+        next_state_value = self.approximator.get_state_value(next_state)
 
-        return reinforcement + self.approximator.discount_factor * self.approximator.state_values[str(next_state)] - self.approximator.state_values[str(state)]
+        return reinforcement + self.approximator.discount_factor * next_state_value - state_value
 
     def compute_state_values(self, td_error: float, reinforcement: float, state: UniversalState, next_state: UniversalState) -> None:
         self.approximator.compute_state_values(td_error, reinforcement, state, next_state)

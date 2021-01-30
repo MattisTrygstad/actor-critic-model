@@ -35,18 +35,6 @@ class NeuralNetworkApproximator(Approximator):
         loss_function = tf.keras.losses.MeanSquaredError()
         self.model.compile(optimizer, loss_function, run_eagerly=True)
 
-    def reset_eligibilities(self) -> None:
-        self.eligibilities.clear()
-        for var in self.model.trainable_variables:
-            self.eligibilities.append(tf.zeros_like(var))
-
-    def set_eligibility(self, state: UniversalState, value: float) -> None:
-        pass
-
-    def decay_eligibilies(self) -> None:
-        for i in range(len(self.eligibilities)):
-            self.eligibilities[i] = self.decay_rate * self.discount_factor * self.eligibilities[i]
-
     def compute_state_values(self, td_error: float, reinforcement: float, state: UniversalState, next_state: UniversalState) -> None:
         with tf.GradientTape() as gradient_tape:
             state, next_state, discount_factor, reinforcement = self.__convert_to_tensors(state, next_state, self.discount_factor, reinforcement)
@@ -62,8 +50,10 @@ class NeuralNetworkApproximator(Approximator):
 
         self.model.optimizer.apply_gradients(zip(updated_gradients, self.model.trainable_variables))
 
-    def initialize_state_value(self, state: UniversalState) -> None:
-        self.state_values.setdefault(str(state), np.random.uniform(-0.01, 0.01))
+    def get_state_value(self, state: UniversalState) -> float:
+        state_array = [tf.strings.to_number(value, out_type=tf.dtypes.int32) for value in str(state)]
+        state_tensor = tf.convert_to_tensor(np.expand_dims(state_array, axis=0))
+        return self.model(state_tensor).numpy()[0][0]
 
     def __convert_to_tensors(self, state: UniversalState, next_state: UniversalState, discount_rate: float, reinforcement: float) -> tuple:
         state_array = [tf.strings.to_number(value, out_type=tf.dtypes.float32) for value in str(state)]
@@ -84,3 +74,15 @@ class NeuralNetworkApproximator(Approximator):
             gradients[index] = self.eligibilities[index] * td_error
 
         return gradients
+
+    def reset_eligibilities(self) -> None:
+        self.eligibilities.clear()
+        for var in self.model.trainable_variables:
+            self.eligibilities.append(tf.zeros_like(var))
+
+    def set_eligibility(self, state: UniversalState, value: float) -> None:
+        pass
+
+    def decay_eligibilies(self) -> None:
+        for i in range(len(self.eligibilities)):
+            self.eligibilities[i] = self.decay_rate * self.discount_factor * self.eligibilities[i]

@@ -78,10 +78,10 @@ def actor_critic_game(actor_learning_rate: float, critic_learning_rate: float, a
 
     env = HexagonalGrid(win_multiplier)
     if Config.nn_critic:
-        approximator = NeuralNetworkApproximator(15, Config.nn_dimentions, Config.critic_learning_rate, Config.critic_discount_factor, Config.critic_decay_rate)
+        approximator = NeuralNetworkApproximator(15, Config.nn_dimentions, critic_learning_rate, critic_discount_factor, critic_decay_rate)
     else:
         print('table')
-        approximator = TableApproximator(Config.critic_discount_factor, Config.critic_decay_rate, Config.critic_learning_rate)
+        approximator = TableApproximator(critic_discount_factor, critic_decay_rate, critic_learning_rate)
 
     critic = Critic(approximator)
     actor = Actor(actor_discount_factor, actor_decay_rate, actor_learning_rate)
@@ -159,12 +159,14 @@ def actor_critic_game(actor_learning_rate: float, critic_learning_rate: float, a
     if visualize:
         print(f'Final model win rate: {test_wins}/{Config.test_episodes} = {round(test_wins/Config.test_episodes*100, 2)}% ')
 
-        if test_wins == Config.test_episodes:
+        if Config.visualize_without_convergence or test_wins == Config.test_episodes:
             plt.plot(remaining_nodes)
             plt.ylabel('Remaining nodes')
             plt.show()
 
             plt.close()
+
+        if test_wins == Config.test_episodes:
 
             visualize_greedy_episode(actor, critic)
 
@@ -181,7 +183,7 @@ def visualize_greedy_episode(actor: Actor, critic: Critic):
 
     while True:
         reinforcement = env.execute_action(action)
-        env.visualize(False, 2)
+        env.visualize(False, Config.visualization_delay)
 
         if env.check_win_condition():
             break
