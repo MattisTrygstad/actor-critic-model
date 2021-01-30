@@ -1,5 +1,5 @@
 
-import ast
+import sys
 from datetime import timedelta
 from statistics import mean, median
 import time
@@ -77,8 +77,9 @@ def run_experiments() -> None:
 def actor_critic_game(actor_learning_rate: float, critic_learning_rate: float, actor_decay_rate: float, critic_decay_rate: float, actor_discount_factor: float, critic_discount_factor: float, linear_epsilon: bool, win_multiplier: int, initial_epsilon: float, exploitation_start: int, visualize: bool) -> int:
 
     env = HexagonalGrid(win_multiplier)
+
     if Config.nn_critic:
-        approximator = NeuralNetworkApproximator(15, Config.nn_dimentions, critic_learning_rate, critic_discount_factor, critic_decay_rate)
+        approximator = NeuralNetworkApproximator(len(str(env.get_state())), Config.nn_dimentions, critic_learning_rate, critic_discount_factor, critic_decay_rate)
     else:
         print('table')
         approximator = TableApproximator(critic_discount_factor, critic_decay_rate, critic_learning_rate)
