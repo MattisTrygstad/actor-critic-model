@@ -6,10 +6,10 @@ from environment.universal_state import UniversalState
 
 
 class Actor:
-    def __init__(self, actor_discount_factor: float, actor_decay_rate: float, actor_learning_rate: float) -> None:
-        self.actor_discount_factor = actor_discount_factor
-        self.actor_decay_rate = actor_decay_rate
-        self.actor_learning_rate = actor_learning_rate
+    def __init__(self, discount_factor: float, decay_rate: float, learning_rate: float) -> None:
+        self.discount_factor = discount_factor
+        self.decay_rate = decay_rate
+        self.learning_rate = learning_rate
 
         self.policies = {}  # Pi(s)
         self.eligibilities = {}  # SAP-based eligibilities
@@ -44,9 +44,9 @@ class Actor:
             for action_key, eligibility in action_dict.items():
                 value = self.policies.setdefault(str(state_key), {}).setdefault(str(action_key), 0)
 
-                self.policies[str(state_key)][str(action_key)] = value + self.actor_learning_rate * eligibility * td_error
+                self.policies[str(state_key)][str(action_key)] = value + self.learning_rate * eligibility * td_error
 
     def decay_eligibilities(self) -> None:
         for state_key, action_dict in self.eligibilities.items():
             for action_key, eligibility in action_dict.items():
-                self.eligibilities[str(state_key)][str(action_key)] = self.actor_decay_rate * self.actor_discount_factor * eligibility
+                self.eligibilities[str(state_key)][str(action_key)] = self.decay_rate * self.discount_factor * eligibility

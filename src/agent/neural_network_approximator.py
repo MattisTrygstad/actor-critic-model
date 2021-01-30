@@ -13,7 +13,7 @@ from tensorflow.keras.models import Sequential
 class NeuralNetworkApproximator(Approximator):
 
     def __init__(self, inputSize: int, nn_dimentions: list, learning_rate: float, discount_factor: float, decay_rate: float) -> None:
-        super().__init__()
+        super().__init__(discount_factor)
 
         self.eligibilities = []
 
@@ -47,7 +47,7 @@ class NeuralNetworkApproximator(Approximator):
         for i in range(len(self.eligibilities)):
             self.eligibilities[i] = self.decay_rate * self.discount_factor * self.eligibilities[i]
 
-    def compute_state_values(self, state: UniversalState, next_state: UniversalState, td_error: float, reinforcement: float) -> dict:
+    def compute_state_values(self, td_error: float, reinforcement: float, state: UniversalState, next_state: UniversalState) -> None:
         with tf.GradientTape() as gradient_tape:
             state, next_state, discount_factor, reinforcement = self.__convert_to_tensors(state, next_state, self.discount_factor, reinforcement)
 
@@ -62,7 +62,7 @@ class NeuralNetworkApproximator(Approximator):
 
         self.model.optimizer.apply_gradients(zip(updated_gradients, self.model.trainable_variables))
 
-    def initialize_state_values(self, state: UniversalState) -> None:
+    def initialize_state_value(self, state: UniversalState) -> None:
         self.state_values.setdefault(str(state), np.random.uniform(-0.01, 0.01))
 
     def __convert_to_tensors(self, state: UniversalState, next_state: UniversalState, discount_rate: float, reinforcement: float) -> tuple:

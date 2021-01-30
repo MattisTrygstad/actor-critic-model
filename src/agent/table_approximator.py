@@ -13,7 +13,7 @@ class TableApproximator(Approximator):
         self.learning_rate = learning_rate
         self.eligibilities = {}  # State-based eligibilities
 
-    def compute_state_values(self, td_error: float) -> None:
+    def compute_state_values(self, td_error: float, reinforcement: float, state: UniversalState, next_state: UniversalState) -> None:
         for key in self.eligibilities:
             self.state_values[key] += self.learning_rate * self.eligibilities[key] * td_error
 

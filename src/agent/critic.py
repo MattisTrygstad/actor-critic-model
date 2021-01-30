@@ -15,8 +15,8 @@ class Critic:
 
         return reinforcement + self.approximator.discount_factor * self.approximator.state_values[str(next_state)] - self.approximator.state_values[str(state)]
 
-    def compute_state_values(self, td_error: float) -> None:
-        self.approximator.compute_state_values(td_error)
+    def compute_state_values(self, td_error: float, reinforcement: float, state: UniversalState, next_state: UniversalState) -> None:
+        self.approximator.compute_state_values(td_error, reinforcement, state, next_state)
 
     def initialize_state_value(self, state: UniversalState) -> None:
         self.approximator.initialize_state_value(state)
