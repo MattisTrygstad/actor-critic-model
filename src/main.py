@@ -7,6 +7,7 @@ import time
 from matplotlib import pyplot as plt
 from agent.actor import Actor
 from agent.critic import Critic
+from agent.neural_network_approximator import NeuralNetworkApproximator
 from agent.table_approximator import TableApproximator
 from environment.hexagonal_grid import HexagonalGrid
 from environment.universal_action import UniversalAction
@@ -76,7 +77,12 @@ def run_experiments() -> None:
 def actor_critic_game(actor_learning_rate: float, critic_learning_rate: float, actor_decay_rate: float, critic_decay_rate: float, actor_discount_factor: float, critic_discount_factor: float, linear_epsilon: bool, win_multiplier: int, initial_epsilon: float, exploitation_start: int, visualize: bool) -> int:
 
     env = HexagonalGrid(win_multiplier)
-    approximator = TableApproximator()
+    if Config.nn_critic:
+        approximator = NeuralNetworkApproximator(15, Config.nn_dimentions, Config.critic_learning_rate, Config.critic_discount_factor, Config.critic_decay_rate)
+    else:
+        print('table')
+        approximator = TableApproximator(Config.critic_discount_factor, Config.critic_decay_rate)
+
     critic = Critic(approximator, critic_discount_factor, critic_decay_rate, critic_learning_rate)
     actor = Actor(actor_discount_factor, actor_decay_rate, actor_learning_rate)
 
@@ -89,10 +95,11 @@ def actor_critic_game(actor_learning_rate: float, critic_learning_rate: float, a
     test_wins = 0
     losses = 0
     remaining_nodes = []
-    random_moves = []
 
     for episode in range(Config.episodes + Config.test_episodes):
         env.reset()
+        # critic.reset_eligibilities()
+        # actor.reset_eligibilities()
 
         if episode >= Config.episodes:
             # No exploration during final model test
@@ -105,15 +112,18 @@ def actor_critic_game(actor_learning_rate: float, critic_learning_rate: float, a
                 epsilon *= Config.epsilon_decay
 
         state: UniversalState = env.get_state()
-        action, random = actor.generate_action(state, env.get_legal_actions(), epsilon)
 
-        history = []
-        random_count = 0
+        critic.set_eligibility(state, 1)
+
+        if not Config.nn_critic:
+            critic.initialize_state_value(state)
+
+        action = actor.generate_action(state, env.get_legal_actions(), epsilon)
+
+        actor.set_eligibility(state, action, 1)
 
         while True:
             reinforcement = env.execute_action(action)
-            if random:
-                random_count += 1
 
             if env.check_win_condition():
                 if episode < Config.episodes:
@@ -127,32 +137,28 @@ def actor_critic_game(actor_learning_rate: float, critic_learning_rate: float, a
                 break
 
             next_state = env.get_state()
-            next_legal_actions = env.get_legal_actions()
-            next_action, random = actor.generate_action(next_state, next_legal_actions, epsilon)
 
-            actor.set_eligibility(state, action, 1)
+            if not Config.nn_critic:
+                critic.initialize_state_value(next_state)
+
+            next_legal_actions = env.get_legal_actions()
+            next_action = actor.generate_action(next_state, next_legal_actions, epsilon)
+
+            actor.set_eligibility(next_state, next_action, 1)
+            critic.set_eligibility(state, 1)
 
             td_error = critic.compute_temporal_difference_error(state, next_state, reinforcement)
 
-            critic.set_eligibility(state, 1)
-
-            history.append((state, action))
-
-            for encountered_state, encountered_action in history:
-
-                critic.compute_state_value(encountered_state, td_error)
-
-                critic.set_eligibility(encountered_state, Config.critic_discount_factor * Config.critic_decay_rate * critic.eligibilities[str(encountered_state)])
-
-                actor.compute_policy(encountered_state, encountered_action, td_error)
-
-                actor.set_eligibility(encountered_state, encountered_action, Config.actor_discount_factor * Config.actor_decay_rate * actor.eligibilities[str(encountered_state)][str(encountered_action)])
+            # For all (s,a) pairs
+            critic.compute_state_values(td_error, critic_learning_rate)
+            critic.decay_eligibilities()
+            actor.compute_policies(td_error)
+            actor.decay_eligibilities()
 
             state = next_state
             action = next_action
 
         if visualize:
-            random_moves.append(random_count)
             remaining_nodes.append(len(env.state.get_occupied_nodes()))
 
             if episode < Config.episodes:
@@ -214,11 +220,11 @@ def visualize_greedy_episode(actor: Actor, critic: Critic):
 
         for encountered_state, encountered_action in history:
 
-            critic.compute_state_value(encountered_state, td_error)
+            critic.compute_state_values(encountered_state, td_error)
 
             critic.set_eligibility(encountered_state, Config.critic_discount_factor * Config.critic_decay_rate * critic.eligibilities[str(encountered_state)])
 
-            actor.compute_policy(encountered_state, encountered_action, td_error)
+            actor.compute_policies(encountered_state, encountered_action, td_error)
 
             actor.set_eligibility(encountered_state, encountered_action, Config.actor_discount_factor * Config.actor_decay_rate * actor.eligibilities[str(encountered_state)][str(encountered_action)])
 

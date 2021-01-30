@@ -22,11 +22,9 @@ class Actor:
         self.eligibilities.setdefault(str(state), {})[str(action)] = value
 
     def generate_action(self, state: UniversalState, legal_actions: list, epsilon: float) -> UniversalAction:
-        random_action = False
         if random.uniform(0, 1) < epsilon:
             random_index = random.randint(0, len(legal_actions) - 1)
             chosen_action = legal_actions[random_index]
-            random_action = True
 
         else:
             action_policies = {}
@@ -39,8 +37,16 @@ class Actor:
 
         universal_action = UniversalAction()
         universal_action.action = chosen_action
-        return universal_action, random_action
+        return universal_action
 
-    def compute_policy(self, state: UniversalState, action: UniversalAction, td_error: float) -> None:
-        value = self.policies.setdefault(str(state), {}).setdefault(str(action), 0)
-        self.policies[str(state)][str(action)] = value + self.actor_learning_rate * self.eligibilities[str(state)][str(action)] * td_error
+    def compute_policies(self, td_error: float) -> None:
+        for state_key, action_dict in self.eligibilities.items():
+            for action_key, eligibility in action_dict.items():
+                value = self.policies.setdefault(str(state_key), {}).setdefault(str(action_key), 0)
+
+                self.policies[str(state_key)][str(action_key)] = value + self.actor_learning_rate * eligibility * td_error
+
+    def decay_eligibilities(self) -> None:
+        for state_key, action_dict in self.eligibilities.items():
+            for action_key in action_dict:
+                self.eligibilities[str(state_key)][str(action_key)] *= self.actor_decay_rate * self.actor_discount_factor
