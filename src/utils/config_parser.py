@@ -28,8 +28,8 @@ class Config:
     episodes = int(config.get('parameters', 'episodes'))
     test_episodes = int(config.get('parameters', 'test_episodes'))
 
-    nn_critic = bool(config.get('parameters', 'nn_critic'))
-    nn_dimentions = list(config.get('parameters', 'nn_dimentions'))
+    nn_critic = bool(ast.literal_eval(config.get('parameters', 'nn_critic')))
+    nn_dimentions = list(ast.literal_eval(config.get('parameters', 'nn_dimentions')))
 
     actor_learning_rate = float(config.get('parameters', 'actor_learning_rate'))
     critic_learning_rate = float(config.get('parameters', 'critic_learning_rate'))

@@ -1,16 +1,86 @@
 
+from collections import defaultdict
 import numpy as np
+from tensorflow.python.keras.layers.core import InstanceMethod
 from abstract_classes.approximator import Approximator
 from environment.universal_state import UniversalState
+import tensorflow as tf
+from tensorflow.keras import Input
+from tensorflow.keras.layers import Dense
+from tensorflow.keras.models import Sequential
 
 
 class NeuralNetworkApproximator(Approximator):
 
-    def __init__(self) -> None:
+    def __init__(self, inputSize: int, nn_dimentions: list, learning_rate: float, discount_factor: float, decay_rate: float) -> None:
         super().__init__()
 
-    def compute_state_value(self, state: UniversalState, td_error: float, eligibilities: dict, learning_rate: float) -> None:
-        self.state_values[str(state)] = self.state_values[str(state)] + learning_rate * eligibilities[str(state)] * td_error
+        self.eligibilities = []
 
-    def initialize_state_value(self, state: UniversalState) -> None:
+        self.learning_rate = learning_rate
+        self.discount_factor = discount_factor
+        self.decay_rate = decay_rate
+
+        self.model = Sequential()
+        # self.model.add(Input(inputSize))
+        self.model.add(Dense(inputSize, activation='relu', input_dim=inputSize))
+
+        for size in nn_dimentions:
+            self.model.add(Dense(size, activation='relu'))
+
+        self.model.add(Dense(1))
+        self.reset_eligibilities()
+
+        optimizer = tf.keras.optimizers.Adagrad(learning_rate=learning_rate)
+        loss_function = tf.keras.losses.MeanSquaredError()
+        self.model.compile(optimizer, loss_function, run_eagerly=True)
+
+    def reset_eligibilities(self) -> None:
+        self.eligibilities.clear()
+        for var in self.model.trainable_variables:
+            self.eligibilities.append(tf.zeros_like(var))
+
+    def set_eligibility(self, state: UniversalState, value: float) -> None:
+        pass
+
+    def decay_eligibilies(self) -> None:
+        for i in range(len(self.eligibilities)):
+            self.eligibilities[i] = self.decay_rate * self.discount_factor * self.eligibilities[i]
+
+    def compute_state_values(self, state: UniversalState, next_state: UniversalState, td_error: float, reinforcement: float) -> dict:
+        with tf.GradientTape() as gradient_tape:
+            state, next_state, discount_factor, reinforcement = self.__convert_to_tensors(state, next_state, self.discount_factor, reinforcement)
+
+            target_value = tf.add(reinforcement, tf.multiply(discount_factor, self.model(next_state)))
+
+            predicted_value = self.model(state)
+            loss = self.model.loss(target_value, predicted_value)
+
+        gradients = gradient_tape.gradient(loss, self.model.trainable_variables)
+
+        updated_gradients = self.__customize_gradients(gradients, td_error, self.eligibilities)
+
+        self.model.optimizer.apply_gradients(zip(updated_gradients, self.model.trainable_variables))
+
+    def initialize_state_values(self, state: UniversalState) -> None:
         self.state_values.setdefault(str(state), np.random.uniform(-0.01, 0.01))
+
+    def __convert_to_tensors(self, state: UniversalState, next_state: UniversalState, discount_rate: float, reinforcement: float) -> tuple:
+        state_array = [tf.strings.to_number(value, out_type=tf.dtypes.float32) for value in str(state)]
+        state_tensor = tf.convert_to_tensor(np.expand_dims(state_array, axis=0))
+
+        next_state_array = [tf.strings.to_number(value, out_type=tf.dtypes.float32) for value in str(next_state)]
+        next_state_tensor = tf.convert_to_tensor(np.expand_dims(next_state_array, axis=0))
+
+        discount_rate_tensor = tf.convert_to_tensor(discount_rate, dtype=tf.dtypes.float32)
+        reinforcement_tensor = tf.convert_to_tensor(reinforcement, dtype=tf.dtypes.float32)
+
+        return state_tensor, next_state_tensor, discount_rate_tensor, reinforcement_tensor
+
+    def __customize_gradients(self, gradients: defaultdict, td_error: float, eligibilities: dict) -> tuple:
+        for index in range(len(gradients)):
+            gradients[index] *= 0.5 / td_error
+            self.eligibilities[index] += gradients[index]
+            gradients[index] = self.eligibilities[index] * td_error
+
+        return gradients

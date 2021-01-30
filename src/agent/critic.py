@@ -12,22 +12,21 @@ class Critic:
         self.critic_learning_rate = critic_learning_rate
 
         self.approximator = approximator  # Table or NN
-        self.eligibilities = {}  # State-based eligibilities
 
     def compute_temporal_difference_error(self, state: UniversalState, next_state: UniversalAction, reinforcement: int) -> float:
-        self.approximator.initialize_state_value(state)
-        self.approximator.initialize_state_value(next_state)
+        return reinforcement + self.critic_discount_factor * self.approximator.state_values[str(state)] - self.approximator.state_values[str(next_state)]
 
-        return reinforcement + self.critic_discount_factor * self.approximator.state_values[str(state)] - self.approximator.state_values[str(state)]
-
-    def compute_state_value(self, state: UniversalState, td_error: float) -> None:
-        self.approximator.compute_state_value(state, td_error, self.eligibilities, self.critic_learning_rate)
+    def compute_state_values(self, td_error: float, learning_rate: float) -> None:
+        self.approximator.compute_state_values(td_error, learning_rate)
 
     def initialize_state_value(self, state: UniversalState) -> None:
-        self.approximator.initialize_state_value(state)
+        self.approximator.initialize_state_values(state)
 
-    def reset_eligibilies(self) -> None:
-        self.eligibilities.clear()
+    def reset_eligibilities(self) -> None:
+        self.approximator.reset_eligibilities()
 
     def set_eligibility(self, state: UniversalState, value: int):
-        self.eligibilities[str(state)] = value
+        self.approximator.set_eligibility(state, value)
+
+    def decay_eligibilities(self) -> None:
+        self.approximator.decay_eligibilies()
