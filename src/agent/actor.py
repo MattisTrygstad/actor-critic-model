@@ -48,5 +48,5 @@ class Actor:
 
     def decay_eligibilities(self) -> None:
         for state_key, action_dict in self.eligibilities.items():
-            for action_key in action_dict:
-                self.eligibilities[str(state_key)][str(action_key)] *= self.actor_decay_rate * self.actor_discount_factor
+            for action_key, eligibility in action_dict.items():
+                self.eligibilities[str(state_key)][str(action_key)] = self.actor_decay_rate * self.actor_discount_factor * eligibility

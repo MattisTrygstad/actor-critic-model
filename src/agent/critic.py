@@ -6,21 +6,20 @@ from environment.universal_state import UniversalState
 
 class Critic:
 
-    def __init__(self, approximator: Approximator, critic_discount_factor: float, critic_decay_rate, critic_learning_rate: float) -> None:
-        self.critic_discount_factor = critic_discount_factor
-        self.critic_decay_rate = critic_decay_rate
-        self.critic_learning_rate = critic_learning_rate
-
+    def __init__(self, approximator: Approximator) -> None:
         self.approximator = approximator  # Table or NN
 
     def compute_temporal_difference_error(self, state: UniversalState, next_state: UniversalAction, reinforcement: int) -> float:
-        return reinforcement + self.critic_discount_factor * self.approximator.state_values[str(state)] - self.approximator.state_values[str(next_state)]
+        self.approximator.initialize_state_value(state)
+        self.approximator.initialize_state_value(next_state)
 
-    def compute_state_values(self, td_error: float, learning_rate: float) -> None:
-        self.approximator.compute_state_values(td_error, learning_rate)
+        return reinforcement + self.approximator.discount_factor * self.approximator.state_values[str(next_state)] - self.approximator.state_values[str(state)]
+
+    def compute_state_values(self, td_error: float) -> None:
+        self.approximator.compute_state_values(td_error)
 
     def initialize_state_value(self, state: UniversalState) -> None:
-        self.approximator.initialize_state_values(state)
+        self.approximator.initialize_state_value(state)
 
     def reset_eligibilities(self) -> None:
         self.approximator.reset_eligibilities()
