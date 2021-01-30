@@ -17,6 +17,10 @@ class TableApproximator(Approximator):
         for key in self.eligibilities:
             self.state_values[key] += self.learning_rate * self.eligibilities[key] * td_error
 
+    def get_state_value(self, state: UniversalState) -> float:
+        self.initialize_state_value(state)
+        return self.state_values[str(state)]
+
     def initialize_state_value(self, state: UniversalState) -> None:
         if str(state) not in self.state_values:
             self.state_values.setdefault(str(state), np.random.uniform(-0.01, 0.01))

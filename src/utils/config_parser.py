@@ -43,8 +43,5 @@ class Config:
     epsilon = float(config.get('parameters', 'epsilon'))
     epsilon_decay = float(config.get('parameters', 'epsilon_decay'))
 
-    visualize = str(config.get('parameters', 'visualize'))
-    visualization_frame_delay = int(config.get('parameters', 'visualization_frame_delay'))
-
-    def get_agent_params() -> tuple:
-        return Config.actor_learning_rate, Config.critic_learning_rate, Config.actor_decay_rate, Config.critic_decay_rate, Config.actor_discount_factor, Config.critic_discount_factor
+    visualize_without_convergence = str(ast.literal_eval(config.get('parameters', 'visualize_without_convergence')))
+    visualization_delay = float(config.get('parameters', 'visualization_delay'))
