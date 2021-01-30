@@ -17,7 +17,7 @@ class Approximator(ABC):
         self.eligibilities: Union[dict, list]
 
     @abstractmethod
-    def compute_state_values(self, td_error: float) -> None:
+    def compute_state_values(self, td_error: float, reinforcement: float, state: UniversalState, next_state: UniversalState) -> None:
         pass
 
     @abstractmethod

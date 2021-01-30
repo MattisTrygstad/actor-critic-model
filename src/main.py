@@ -138,7 +138,7 @@ def actor_critic_game(actor_learning_rate: float, critic_learning_rate: float, a
             critic.set_eligibility(state, 1)
 
             # For all (s,a) pairs
-            critic.compute_state_values(td_error)
+            critic.compute_state_values(td_error, reinforcement, state, next_state)
             critic.decay_eligibilities()
             actor.compute_policies(td_error)
             actor.decay_eligibilities()
@@ -199,7 +199,7 @@ def visualize_greedy_episode(actor: Actor, critic: Critic):
         critic.set_eligibility(state, 1)
 
         # For all (s,a) pairs
-        critic.compute_state_values(td_error)
+        critic.compute_state_values(td_error, reinforcement, state, next_state)
         critic.decay_eligibilities()
         actor.compute_policies(td_error)
         actor.decay_eligibilities()
