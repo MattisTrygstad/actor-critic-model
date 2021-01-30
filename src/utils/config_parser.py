@@ -1,5 +1,6 @@
 
 import ast
+import sys
 import configparser
 
 
@@ -14,15 +15,20 @@ class Config:
     critic_learning_rates = list(ast.literal_eval(config.get('parameters', 'critic_learning_rates')))
     iterations = int(config.get('parameters', 'iterations'))
     win_multipliers = list(ast.literal_eval(config.get('parameters', 'win_multipliers')))
-    epsilon_functions = list(ast.literal_eval(config.get('parameters', 'epsilon_functions')))
     initial_epsilons = list(ast.literal_eval(config.get('parameters', 'initial_epsilons')))
     exploitation_thresholds = list(ast.literal_eval(config.get('parameters', 'exploitation_thresholds')))
 
-    action_reward = float(config.get('parameters', 'action_reward'))
-    win_reward = int(config.get('parameters', 'win_reward'))
-    loss_reward = int(config.get('parameters', 'loss_reward'))
+    reinforcement = int(config.get('parameters', 'reinforcement'))
     win_multiplier = int(config.get('parameters', 'win_multiplier'))
-    board_type = int(config.get('parameters', 'board_type'))
+
+    if str(config.get('parameters', 'board_type')) == 'triangle':
+        board_type = 0
+    elif str(config.get('parameters', 'board_type')) == 'diamond':
+        board_type = 1
+    else:
+        print('Invalid board type')
+        sys.exit()
+
     board_size = int(config.get('parameters', 'board_size'))
     empty_nodes = list(ast.literal_eval(config.get('parameters', 'empty_nodes')))
     episodes = int(config.get('parameters', 'episodes'))
