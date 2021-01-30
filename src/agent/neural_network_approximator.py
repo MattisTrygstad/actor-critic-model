@@ -1,10 +1,13 @@
 
 from collections import defaultdict
+
 import numpy as np
-from tensorflow.python.keras.layers.core import InstanceMethod
+import tensorflow as tf
+from tensorflow import GradientTape
+from tensorflow.python.keras.losses import MeanSquaredError
+from tensorflow.python.keras.optimizer_v2.adagrad import Adagrad
 from abstract_classes.approximator import Approximator
 from environment.universal_state import UniversalState
-import tensorflow as tf
 from tensorflow.keras import Input
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.models import Sequential
@@ -30,12 +33,12 @@ class NeuralNetworkApproximator(Approximator):
         self.model.add(Dense(1))
         self.reset_eligibilities()
 
-        optimizer = tf.keras.optimizers.Adagrad(learning_rate=learning_rate)
-        loss_function = tf.keras.losses.MeanSquaredError()
+        optimizer = Adagrad(learning_rate=learning_rate)
+        loss_function = MeanSquaredError()
         self.model.compile(optimizer, loss_function, run_eagerly=True)
 
     def compute_state_values(self, td_error: float, reinforcement: float, state: UniversalState, next_state: UniversalState) -> None:
-        with tf.GradientTape() as gradient_tape:
+        with GradientTape() as gradient_tape:
             state, next_state, discount_factor, reinforcement = NeuralNetworkApproximator.__convert_to_tensors(state, next_state, self.discount_factor, reinforcement)
 
             target_value = tf.add(reinforcement, tf.multiply(discount_factor, self.model(next_state)))
