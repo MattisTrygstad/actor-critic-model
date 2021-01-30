@@ -45,9 +45,9 @@ class HexagonalGrid(Environment):
         self.state.nodes[end_node] = NodeState.OCCUPIED.value
 
         if self.check_win_condition():
-            reinforcement = Config.win_reward * self.win_multiplier
+            reinforcement = Config.reinforcement * self.win_multiplier
         else:
-            reinforcement = Config.win_reward / (len(self.state.get_occupied_nodes()) - 1)
+            reinforcement = Config.reinforcement / (len(self.state.get_occupied_nodes()) - 1)
 
         return reinforcement
 
