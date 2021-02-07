@@ -13,6 +13,7 @@ class Config:
     experiments = bool(ast.literal_eval(config.get('parameters', 'experiments')))
     actor_learning_rates = list(ast.literal_eval(config.get('parameters', 'actor_learning_rates')))
     critic_learning_rates = list(ast.literal_eval(config.get('parameters', 'critic_learning_rates')))
+    decay_discount_values = list(ast.literal_eval(config.get('parameters', 'decay_discount_values')))
     iterations = int(config.get('parameters', 'iterations'))
     win_multipliers = list(ast.literal_eval(config.get('parameters', 'win_multipliers')))
     initial_epsilons = list(ast.literal_eval(config.get('parameters', 'initial_epsilons')))

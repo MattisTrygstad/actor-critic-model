@@ -31,42 +31,47 @@ def main():
 def run_experiments() -> None:
     actor_learnig_rates = Config.actor_learning_rates
     critic_learnig_rates = Config.critic_learning_rates
+    decay_discount_values = Config.decay_discount_values
     win_multipliers = Config.win_multipliers
     initial_epsilons = Config.initial_epsilons
     exploitation_thresholds = Config.exploitation_thresholds
 
     iterations = Config.iterations
 
-    total = len(actor_learnig_rates) * len(critic_learnig_rates) * len(win_multipliers) * len(initial_epsilons) * len(exploitation_thresholds) * iterations
+    total = len(actor_learnig_rates) * len(critic_learnig_rates) * len(win_multipliers) * len(initial_epsilons) * len(exploitation_thresholds) * (4 * len(decay_discount_values)) * iterations
 
     count = 1
     estimated_run_time = 0
 
     for actor_learning_rate in actor_learnig_rates:
         for critic_learning_rate in critic_learnig_rates:
-            for multiplier in win_multipliers:
-                for epsilon in initial_epsilons:
-                    for threshold in exploitation_thresholds:
+            for critic_decay_rate in decay_discount_values:
+                for actor_decay_rate in decay_discount_values:
+                    for critic_discount_factor in decay_discount_values:
+                        for actor_discount_factor in decay_discount_values:
+                            for multiplier in win_multipliers:
+                                for epsilon in initial_epsilons:
+                                    for threshold in exploitation_thresholds:
 
-                        training_wins = []
-                        test_wins = []
+                                        training_wins = []
+                                        test_wins = []
 
-                        for x in range(iterations):
-                            start = time.time()
-                            print(f'Experiment progress: {count}/{total}, estimated run time: {str(timedelta(seconds=estimated_run_time))}')
-                            training, test = actor_critic_game(actor_learning_rate, critic_learning_rate, Config.actor_decay_rate, Config.critic_decay_rate, Config.actor_discount_factor, Config.critic_discount_factor, Config.linear_epsilon, multiplier, epsilon, threshold, False)
+                                        for x in range(iterations):
+                                            start = time.time()
+                                            print(f'Experiment progress: {count}/{total}, estimated run time: {str(timedelta(seconds=estimated_run_time))}')
+                                            training, test = actor_critic_game(actor_learning_rate, critic_learning_rate, actor_decay_rate, critic_decay_rate, actor_discount_factor, critic_discount_factor, Config.linear_epsilon, multiplier, epsilon, threshold, False)
 
-                            training_wins.append(training)
-                            test_wins.append(test)
+                                            training_wins.append(training)
+                                            test_wins.append(test)
 
-                            count += 1
+                                            count += 1
 
-                            end = time.time()
-                            estimated_run_time = (end - start) * (total - count)
+                                            end = time.time()
+                                            estimated_run_time = (end - start) * (total - count)
 
-                        f = open('../experiment_results.txt', 'a')
-                        f.write(f'{actor_learning_rate},{critic_learning_rate},{multiplier},{Config.linear_epsilon},{epsilon},{threshold},{round(mean(training_wins), 2)},{round(median(training_wins),2)},{round(mean(test_wins), 2)},{round(median(test_wins),2)}\n')
-                        f.close()
+                                        f = open('../experiment_results.txt', 'a')
+                                        f.write(f'{critic_learning_rate},{actor_learning_rate},{critic_decay_rate},{actor_decay_rate},{critic_discount_factor},{actor_discount_factor},{multiplier},{Config.linear_epsilon},{epsilon},{threshold},{round(mean(training_wins), 2)},{round(median(training_wins),2)},{round(mean(test_wins), 2)},{round(median(test_wins),2)}\n')
+                                        f.close()
 
 
 def actor_critic_game(actor_learning_rate: float, critic_learning_rate: float, actor_decay_rate: float, critic_decay_rate: float, actor_discount_factor: float, critic_discount_factor: float, linear_epsilon: bool, win_multiplier: int, initial_epsilon: float, exploitation_start: int, visualize: bool) -> int:
