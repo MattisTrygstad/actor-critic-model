@@ -1,9 +1,5 @@
 .vscode
-<<<<<<< HEAD
-.DS_store
-=======
 .DS_Store
->>>>>>> 1f8aa70... fix: updated .gitignore
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
