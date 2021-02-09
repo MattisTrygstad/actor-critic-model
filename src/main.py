@@ -38,7 +38,7 @@ def run_experiments() -> None:
 
     iterations = Config.iterations
 
-    total = len(actor_learnig_rates) * len(critic_learnig_rates) * len(win_multipliers) * len(initial_epsilons) * len(exploitation_thresholds) * (4 * len(decay_discount_values)) * iterations
+    total = len(actor_learnig_rates) * len(critic_learnig_rates) * len(win_multipliers) * len(initial_epsilons) * len(exploitation_thresholds) * (len(decay_discount_values)**4) * iterations
 
     count = 1
     estimated_run_time = 0
