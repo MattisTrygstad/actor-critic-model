@@ -37,6 +37,7 @@ class Config:
 
     nn_critic = bool(ast.literal_eval(config.get('parameters', 'nn_critic')))
     nn_dimentions = list(ast.literal_eval(config.get('parameters', 'nn_dimentions')))
+    nn_activation_functions = list(ast.literal_eval(config.get('parameters', 'nn_activation_functions')))
 
     actor_learning_rate = float(config.get('parameters', 'actor_learning_rate'))
     critic_learning_rate = float(config.get('parameters', 'critic_learning_rate'))

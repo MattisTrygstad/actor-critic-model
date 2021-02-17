@@ -32,7 +32,7 @@ def actor_critic_game(actor_learning_rate: float, critic_learning_rate: float, a
     env = HexagonalGrid(win_multiplier)
 
     if Config.nn_critic:
-        approximator = NeuralNetworkApproximator(len(str(env.get_state())), Config.nn_dimentions, critic_learning_rate, critic_discount_factor, critic_decay_rate)
+        approximator = NeuralNetworkApproximator(len(str(env.get_state())), Config.nn_dimentions, Config.nn_activation_functions, critic_learning_rate, critic_discount_factor, critic_decay_rate)
     else:
         approximator = TableApproximator(critic_discount_factor, critic_decay_rate, critic_learning_rate)
 
@@ -59,7 +59,7 @@ def actor_critic_game(actor_learning_rate: float, critic_learning_rate: float, a
             epsilon = 0
         elif linear_epsilon:
             if training_wins >= exploitation_start:
-                epsilon = initial_epsilon - epsilon_linear * episode
+                epsilon = initial_epsilon - epsilon_linear * (episode + 1)
         else:
             if training_wins >= exploitation_start:
                 epsilon *= Config.epsilon_decay
@@ -105,7 +105,6 @@ def actor_critic_game(actor_learning_rate: float, critic_learning_rate: float, a
             if episode < Config.episodes:
                 print(f'Episode: {episode}, wins: {training_wins}, losses: {losses}, epsilon: {round(epsilon, 5)}')
             if episode == Config.episodes:
-                print(epsilon)
                 print(f'Testing final model...')
 
     plt.close()
@@ -120,7 +119,7 @@ def actor_critic_game(actor_learning_rate: float, critic_learning_rate: float, a
 
             plt.close()
 
-        if test_wins > Config.test_episodes * 0.7:
+        if test_wins > Config.test_episodes * 0.6:
 
             visualize_greedy_episode(actor, critic)
 

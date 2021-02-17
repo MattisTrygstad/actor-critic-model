@@ -15,7 +15,7 @@ from tensorflow.keras.models import Sequential
 
 class NeuralNetworkApproximator(Approximator):
 
-    def __init__(self, inputSize: int, nn_dimentions: list, learning_rate: float, discount_factor: float, decay_rate: float) -> None:
+    def __init__(self, inputSize: int, nn_dimentions: list, activation_functions: list, learning_rate: float, discount_factor: float, decay_rate: float) -> None:
         super().__init__(discount_factor)
 
         self.eligibilities = []
@@ -27,8 +27,8 @@ class NeuralNetworkApproximator(Approximator):
         self.model = Sequential()
         self.model.add(Input(inputSize))
 
-        for size in nn_dimentions:
-            self.model.add(Dense(size, activation='relu'))
+        for x in range(len(nn_dimentions)):
+            self.model.add(Dense(nn_dimentions[x], activation=activation_functions[x]))
 
         self.model.add(Dense(1))
         self.reset_eligibilities()
